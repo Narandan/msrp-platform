@@ -1,0 +1,80 @@
+{
+  "milestones": [
+    {
+      "title": "Phase 1 - Backend Skeleton & Auth",
+      "description": "Setup FastAPI backend, DB connection, and authentication.",
+      "state": "open"
+    },
+    {
+      "title": "Phase 2 - Data & Indicator Engine",
+      "description": "Historical data pipeline and technical indicator calculations.",
+      "state": "open"
+    },
+    {
+      "title": "Phase 3 - Stock Pages & Screener",
+      "description": "Stock summary endpoints and pattern screener.",
+      "state": "open"
+    },
+    {
+      "title": "Phase 4 - ML, Watchlists & Polish",
+      "description": "ML-lite model, watchlists, saved screeners, and UI polish.",
+      "state": "open"
+    }
+  ],
+  "issues": [
+    {
+      "title": "Set up FastAPI project structure",
+      "body": "Create backend/ app with main.py and health check.",
+      "milestone_title": "Phase 1 - Backend Skeleton & Auth",
+      "labels": ["backend"]
+    },
+    {
+      "title": "Configure PostgreSQL and SQLAlchemy",
+      "body": "Implement DB connection, session management, and initial models.",
+      "milestone_title": "Phase 1 - Backend Skeleton & Auth",
+      "labels": ["backend", "database"]
+    },
+    {
+      "title": "Implement user auth (register/login)",
+      "body": "Add secure registration, login, hashing, and JWT tokens.",
+      "milestone_title": "Phase 1 - Backend Skeleton & Auth",
+      "labels": ["backend", "security"]
+    },
+    {
+      "title": "Historical data fetcher",
+      "body": "Fetch OHLCV and populate candles table.",
+      "milestone_title": "Phase 2 - Data & Indicator Engine",
+      "labels": ["backend", "data"]
+    },
+    {
+      "title": "Indicator engine (SMA, EMA, RSI, MACD)",
+      "body": "Implement technical indicators and write unit tests.",
+      "milestone_title": "Phase 2 - Data & Indicator Engine",
+      "labels": ["backend", "data", "testing"]
+    },
+    {
+      "title": "Stock summary endpoint",
+      "body": "Expose /stock/{symbol}/summary with indicators + trend score.",
+      "milestone_title": "Phase 3 - Stock Pages & Screener",
+      "labels": ["backend"]
+    },
+    {
+      "title": "Pattern screener endpoint",
+      "body": "Implement POST /screeners/run with golden cross + candidates.",
+      "milestone_title": "Phase 3 - Stock Pages & Screener",
+      "labels": ["backend", "logic"]
+    },
+    {
+      "title": "ML-lite trend model",
+      "body": "Add simple regression or classifier for short-term price trend.",
+      "milestone_title": "Phase 4 - ML, Watchlists & Polish",
+      "labels": ["backend", "ml"]
+    },
+    {
+      "title": "Watchlist & saved screeners endpoints",
+      "body": "CRUD for user-specific saved screeners and watchlists.",
+      "milestone_title": "Phase 4 - ML, Watchlists & Polish",
+      "labels": ["backend"]
+    }
+  ]
+}
