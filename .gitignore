@@ -215,3 +215,4 @@ venv/
 # Python cache
 __pycache__/
 *.pyc
+backend/msrp.db
