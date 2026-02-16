@@ -13,3 +13,4 @@ class IndicatorPoint(BaseModel):
 class IndicatorsResponse(BaseModel):
     symbol: str
     points: List[IndicatorPoint]
+
