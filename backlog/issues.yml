@@ -1,55 +1,54 @@
 version: 1
 
 labels:
-  - name: course-backlog
-    color: 782F40
-    description: Work items that contribute to course grading (tracked + linkable)
+  - name: "course-backlog"
+    color: "782F40"
+    description: "Work items that contribute to course grading (tracked + linkable)"
 
-  - name: increment:01
-    color: FFFFFF
-    description: Increment 1 work
+  - name: "increment:01"
+    color: "FFFFFF"
+    description: "Increment 1 work"
 
-  - name: type:feature
-    color: CEB888
-    description: New functionality
+  - name: "type:feature"
+    color: "CEB888"
+    description: "New functionality"
 
-  - name: type:bug
-    color: D73A4A
-    description: Something is broken
+  - name: "type:bug"
+    color: "D73A4A"
+    description: "Something is broken"
 
-  - name: type:chore
-    color: 6A737D
-    description: Repo/process cleanup, tooling, guardrails
+  - name: "type:chore"
+    color: "6A737D"
+    description: "Repo/process cleanup, tooling, guardrails"
 
-  - name: area:backend
-    color: 1D76DB
-    description: FastAPI / services / DB
+  - name: "area:backend"
+    color: "1D76DB"
+    description: "FastAPI / services / DB"
 
-  - name: area:ui
-    color: 0E8A16
-    description: Frontend / pages / styling
+  - name: "area:ui"
+    color: "0E8A16"
+    description: "Frontend / pages / styling"
 
-  - name: area:docs
-    color: 5319E7
-    description: Documentation deliverables + README
+  - name: "area:docs"
+    color: "5319E7"
+    description: "Documentation deliverables + README"
 
-  - name: priority:high
-    color: B60205
-    description: Must be done for Increment 1 demo
+  - name: "priority:high"
+    color: "B60205"
+    description: "Must be done for Increment 1 demo"
 
-  - name: priority:med
-    color: FBCA04
-    description: Important but not blocking
+  - name: "priority:med"
+    color: "FBCA04"
+    description: "Important but not blocking"
 
 milestones:
-  - title: Increment 1
-    description: MSRP Increment 1 deliverables + stable demo scope
-    state: open
+  - title: "Increment 1"
+    description: "MSRP Increment 1 deliverables + stable demo scope"
+    state: "open"
 
 issues:
-  # --- Already implemented core (keep tracked for credit) ---
-  - id: MSRP-INC1-001
-    title: Auth system (register/login/me) with JWT + hashed passwords
+  - id: "MSRP-INC1-001"
+    title: "Auth system (register/login/me) with JWT + hashed passwords"
     body: |
       Implement and verify:
       - POST /auth/register
@@ -59,11 +58,16 @@ issues:
       Acceptance:
       - Smoke test script demonstrates register/login/me.
       - Passwords are hashed (passlib+bcrypt).
-    labels: [course-backlog, increment:01, type:feature, area:backend, priority:high]
-    milestone: Increment 1
+    labels:
+      - "course-backlog"
+      - "increment:01"
+      - "type:feature"
+      - "area:backend"
+      - "priority:high"
+    milestone: "Increment 1"
 
-  - id: MSRP-INC1-002
-    title: Stock ingestion (Stooq) with candle dedupe
+  - id: "MSRP-INC1-002"
+    title: "Stock ingestion (Stooq) with candle dedupe"
     body: |
       Implement and verify:
       - POST /stocks/{symbol}/ingest?start=YYYY-MM-DD&end=YYYY-MM-DD (auth required)
@@ -72,21 +76,31 @@ issues:
       Acceptance:
       - Re-ingesting same range does not create duplicates.
       - GET /stocks/{symbol}/candles returns CandleDTO list.
-    labels: [course-backlog, increment:01, type:feature, area:backend, priority:high]
-    milestone: Increment 1
+    labels:
+      - "course-backlog"
+      - "increment:01"
+      - "type:feature"
+      - "area:backend"
+      - "priority:high"
+    milestone: "Increment 1"
 
-  - id: MSRP-INC1-003
-    title: Indicators endpoint with SMA/RSI alignment
+  - id: "MSRP-INC1-003"
+    title: "Indicators endpoint with SMA/RSI alignment"
     body: |
       Implement and verify:
       - GET /indicators/{symbol}?start&end&sma_period&rsi_period (auth required)
       - SMA alignment: first period-1 points null
       - RSI alignment: first period points null
-    labels: [course-backlog, increment:01, type:feature, area:backend, priority:high]
-    milestone: Increment 1
+    labels:
+      - "course-backlog"
+      - "increment:01"
+      - "type:feature"
+      - "area:backend"
+      - "priority:high"
+    milestone: "Increment 1"
 
-  - id: MSRP-INC1-004
-    title: Strategy signals (SMA threshold) standardized SignalPoint output
+  - id: "MSRP-INC1-004"
+    title: "Strategy signals (SMA threshold) standardized SignalPoint output"
     body: |
       Implement one simple strategy that produces standardized signals:
       - 1 = BUY, 0 = HOLD, -1 = SELL
@@ -95,42 +109,60 @@ issues:
 
       Acceptance:
       - Pure function takes dates/closes/sma and returns SignalPoint list.
-    labels: [course-backlog, increment:01, type:feature, area:backend, priority:high]
-    milestone: Increment 1
+    labels:
+      - "course-backlog"
+      - "increment:01"
+      - "type:feature"
+      - "area:backend"
+      - "priority:high"
+    milestone: "Increment 1"
 
-  - id: MSRP-INC1-005
-    title: Backtest endpoint using long-only all-in/all-out engine
+  - id: "MSRP-INC1-005"
+    title: "Backtest endpoint using long-only all-in/all-out engine"
     body: |
       Implement:
       - GET /backtest/{symbol}?start&end&sma_period&initial_cash (auth required)
+
       Uses:
       - strategy signals
       - long-only execution engine (buy all / sell all at close)
+
       Returns BacktestResult:
       - equity_curve, trades, metrics
 
       Acceptance:
       - curl demo returns equity_curve + trades + metrics for AAPL.
-    labels: [course-backlog, increment:01, type:feature, area:backend, priority:high]
-    milestone: Increment 1
+    labels:
+      - "course-backlog"
+      - "increment:01"
+      - "type:feature"
+      - "area:backend"
+      - "priority:high"
+    milestone: "Increment 1"
 
-  # --- Increment 1 polish items (safe, low-risk) ---
-  - id: MSRP-INC1-006
-    title: Add RSS stock news endpoint (Google News RSS) + basic UI panel
+  - id: "MSRP-INC1-006"
+    title: "Add RSS stock news endpoint (Google News RSS) + basic UI panel"
     body: |
       Add endpoint:
       - GET /news/{symbol}?limit=10 (auth required)
+
       Implement RSS fetch + parse in a service.
       UI: show headlines list on symbol detail page.
 
       Acceptance:
       - Endpoint returns list of articles with title/url/published/source.
       - UI renders without breaking core flow if RSS fails (show friendly message).
-    labels: [course-backlog, increment:01, type:feature, area:backend, area:ui, priority:med]
-    milestone: Increment 1
+    labels:
+      - "course-backlog"
+      - "increment:01"
+      - "type:feature"
+      - "area:backend"
+      - "area:ui"
+      - "priority:med"
+    milestone: "Increment 1"
 
-  - id: MSRP-INC1-007
-    title: Add symbol search endpoint (ticker-only for Increment 1) + UI autocomplete
+  - id: "MSRP-INC1-007"
+    title: "Add symbol search endpoint (ticker-only for Increment 1) + UI autocomplete"
     body: |
       Add endpoint:
       - GET /symbols/search?q=... (auth required)
@@ -140,12 +172,18 @@ issues:
       - return known tickers already in DB (Symbol table)
 
       Acceptance:
-      - UI offers autocomplete suggestions and inserts ticker into watchlist input.
-    labels: [course-backlog, increment:01, type:feature, area:backend, area:ui, priority:med]
-    milestone: Increment 1
+      - UI offers autocomplete suggestions and inserts ticker into input.
+    labels:
+      - "course-backlog"
+      - "increment:01"
+      - "type:feature"
+      - "area:backend"
+      - "area:ui"
+      - "priority:med"
+    milestone: "Increment 1"
 
-  - id: MSRP-INC1-008
-    title: Repo guardrails: single run command, dependency pinning, smoke test entrypoint
+  - id: "MSRP-INC1-008"
+    title: "Repo guardrails: single run command, dependency pinning, smoke test entrypoint"
     body: |
       Reduce risk of teammates breaking things.
 
@@ -156,6 +194,11 @@ issues:
 
       Acceptance:
       - New teammate can clone, install, run, and smoke-test successfully.
-    labels: [course-backlog, increment:01, type:chore, area:docs, area:backend, priority:high]
-    milestone: Increment 1
-
+    labels:
+      - "course-backlog"
+      - "increment:01"
+      - "type:chore"
+      - "area:docs"
+      - "area:backend"
+      - "priority:high"
+    milestone: "Increment 1"
