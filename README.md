@@ -74,7 +74,7 @@ Backend currently includes:
 
 ## Tech Stack
 
-**Backend**
+### Backend
 
 - FastAPI  
 - SQLAlchemy  
