@@ -18,7 +18,8 @@ class Trade(BaseModel):
     return_pct: float
     reason: Optional[str] = None
 
-
+# ISSUE #29: When you implement Sharpe ratio in metrics.py,
+# add a `sharpe_ratio: float | None = None` field to BacktestMetrics.
 class BacktestMetrics(BaseModel):
     total_return_pct: float
     max_drawdown_pct: float = Field(..., ge=0.0)
