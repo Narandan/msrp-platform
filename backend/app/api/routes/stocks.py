@@ -14,6 +14,13 @@ from app.services.stocks.ingest_service import ingest_symbol_candles
 
 router = APIRouter(prefix="/stocks", tags=["stocks"])
 
+@router.get("/ping")
+async def stocks_ping() -> dict:
+    """
+    Simple liveness check for smoke tests.
+    """
+    return {"status": "ok"}
+
 
 @router.post("/{symbol}/ingest", response_model=IngestResponse)
 def ingest(

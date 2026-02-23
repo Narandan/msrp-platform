@@ -5,7 +5,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db  # removed get_current_user
 from app.schemas.backtest import BacktestResult
 from app.services.backtesting.backtest_service import BacktestService
 
@@ -19,8 +19,7 @@ def backtest_symbol(
     end: date = Query(..., description="End date (YYYY-MM-DD)"),
     sma_period: int = Query(20, ge=1, description="SMA period"),
     initial_cash: float = Query(10_000.0, gt=0.0, description="Starting cash"),
-    _user=Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db),  # removed _user dependency
 ) -> BacktestResult:
     try:
         return BacktestService(db).run_sma_threshold_backtest(

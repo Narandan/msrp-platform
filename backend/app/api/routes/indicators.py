@@ -11,6 +11,13 @@ from app.services.indicators.indicator_service import get_indicator_points
 
 router = APIRouter(prefix="/indicators", tags=["indicators"])
 
+@router.get("/ping")
+async def indicators_ping() -> dict:
+    """
+    Simple liveness check for smoke tests.
+    """
+    return {"status": "ok"}
+
 
 @router.get("/{symbol}", response_model=IndicatorsResponse)
 def indicators(

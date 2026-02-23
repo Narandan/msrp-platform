@@ -8,6 +8,13 @@ from app.services.auth_service import register_user, login_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+@router.get("/ping")
+async def auth_ping() -> dict:
+    """
+    Simple liveness check for smoke tests.
+    """
+    return {"status": "ok"}
+
 
 @router.post("/register", response_model=UserPublic)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
