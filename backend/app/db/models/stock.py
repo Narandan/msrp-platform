@@ -1,42 +1,35 @@
-from __future__ import annotations
-
-from datetime import date
-
-from sqlalchemy import Column, Date, Float, ForeignKey, Integer, String, BigInteger
-from sqlalchemy.orm import declarative_base, relationship
-
-
-# NOTE:
-# This Base is local to this models module. If you later reintroduce
-# a shared Base in app/db/__init__.py or similar, you can switch these
-# classes to inherit from that instead.
-Base = declarative_base()
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, Integer, Date, Float, ForeignKey, UniqueConstraint, Index
+from app.db.base import Base
 
 
 class Symbol(Base):
-    __tablename__ = "symbols"  # adjust if your actual table name differs
+    __tablename__ = "symbols"
 
-    id = Column(Integer, primary_key=True, index=True)
-    ticker = Column(String, unique=True, index=True, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    ticker: Mapped[str] = mapped_column(String(16), unique=True, index=True, nullable=False)
+    name: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
-    # relationship to Candle
-    candles = relationship("Candle", back_populates="symbol")
+    candles: Mapped[list["Candle"]] = relationship(back_populates="symbol", cascade="all, delete-orphan")
 
 
 class Candle(Base):
-    __tablename__ = "candles"  # adjust if your actual table name differs
+    __tablename__ = "candles"
 
-    id = Column(Integer, primary_key=True, index=True)
-    symbol_id = Column(Integer, ForeignKey("symbols.id"), index=True, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    date = Column(Date, index=True, nullable=False)
+    symbol_id: Mapped[int] = mapped_column(ForeignKey("symbols.id", ondelete="CASCADE"), nullable=False, index=True)
+    date: Mapped[Date] = mapped_column(Date, nullable=False)
 
-    open = Column(Float, nullable=False)
-    high = Column(Float, nullable=False)
-    low = Column(Float, nullable=False)
-    close = Column(Float, nullable=False)
+    open: Mapped[float] = mapped_column(Float, nullable=False)
+    high: Mapped[float] = mapped_column(Float, nullable=False)
+    low: Mapped[float] = mapped_column(Float, nullable=False)
+    close: Mapped[float] = mapped_column(Float, nullable=False)
+    volume: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-    # volume type depends on your schema; BigInteger is common for volumes
-    volume = Column(BigInteger, nullable=True)
+    symbol: Mapped["Symbol"] = relationship(back_populates="candles")
 
-    symbol = relationship("Symbol", back_populates="candles")
+    __table_args__ = (
+        UniqueConstraint("symbol_id", "date", name="uq_candles_symbol_date"),
+        Index("ix_candles_symbol_date", "symbol_id", "date"),
+    )

@@ -1,38 +1,48 @@
-from collections.abc import Generator
+from typing import Generator
+from sqlalchemy.orm import Session
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-
-
-# SQLite DB file in the backend root: ./msrp.db
-SQLALCHEMY_DATABASE_URL = "sqlite:///./msrp.db"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},  # required for SQLite + FastAPI
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+from app.db.session import SessionLocal
 
 
 def get_db() -> Generator[Session, None, None]:
-    """
-    FastAPI dependency that yields a DB session
-    and ensures it is closed after the request.
-    """
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
 
+from typing import Optional
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError
+from sqlalchemy import select
 
-def get_current_user():
-    """
-    TEMPORARY STUB.
+from app.core.security import decode_access_token
+from app.db.models.user import User
 
-    Replace this with real authentication later.
-    For now, it just returns a fake user so routes depending on
-    authentication can run for development/testing.
-    """
-    return {"id": 1, "email": "demo@example.com"}
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid authentication credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = decode_access_token(token)
+        subject: Optional[str] = payload.get("sub")
+        if subject is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    user = db.execute(select(User).where(User.email == subject)).scalar_one_or_none()
+    if user is None:
+        raise credentials_exception
+    return user
+
