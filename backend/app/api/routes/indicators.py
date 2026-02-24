@@ -25,7 +25,10 @@ def indicators(
     start: date = Query(...),
     end: date = Query(...),
     sma_period: Optional[int] = Query(None, ge=1, le=500),
+    ema_period: Optional[int] = Query(None, ge=1, le=500),
     rsi_period: Optional[int] = Query(None, ge=1, le=500),
+    bb_period: Optional[int] = Query(None, ge=1, le=500),
+    bb_std: Optional[float] = Query(2.0, ge=0.1, le=5.0),
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
@@ -35,6 +38,9 @@ def indicators(
         start=start,
         end=end,
         sma_period=sma_period,
+        ema_period=ema_period,
         rsi_period=rsi_period,
+        bb_period=bb_period,
+        bb_std=bb_std,
     )
     return IndicatorsResponse(symbol=symbol.upper(), points=points)

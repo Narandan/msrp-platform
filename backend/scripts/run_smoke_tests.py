@@ -20,14 +20,14 @@ def _check_endpoint(
     try:
         resp = requests.get(url, timeout=5)
     except Exception as e:
-        print(f"  ❌ FAILED: request error: {e}")
+        print(f"  [FAIL] FAILED: request error: {e}")
         raise
 
     if resp.status_code not in expected_status:
-        print(f"  ❌ FAILED: status {resp.status_code}, body={resp.text[:200]}")
+        print(f"  [FAIL] FAILED: status {resp.status_code}, body={resp.text[:200]}")
         raise RuntimeError(f"Unexpected status {resp.status_code} for {path}")
 
-    print(f"  ✅ OK (status {resp.status_code})")
+    print(f"  [OK] OK (status {resp.status_code})")
 
 
 def main() -> None:
@@ -61,15 +61,15 @@ def main() -> None:
     try:
         resp = requests.get(url, timeout=10)
     except Exception as e:
-        print(f"  ❌ FAILED: request error: {e}")
+        print(f"  [FAIL] FAILED: request error: {e}")
         raise
 
     if resp.status_code == 200:
-        print("  ✅ OK (backtest returned 200)")
+        print("  [OK] OK (backtest returned 200)")
     elif resp.status_code == 400 and "Symbol not found" in resp.text:
-        print("  ✅ OK (endpoint reachable; symbol not yet ingested)")
+        print("  [OK] OK (endpoint reachable; symbol not yet ingested)")
     else:
-        print(f"  ❌ FAILED: status {resp.status_code}, body={resp.text[:200]}")
+        print(f"  [FAIL] FAILED: status {resp.status_code}, body={resp.text[:200]}")
         raise RuntimeError("Unexpected response from backtest endpoint")
 
     print("\n=== All smoke checks completed successfully ===")

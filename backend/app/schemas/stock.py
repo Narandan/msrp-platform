@@ -16,3 +16,11 @@ class CandleDTO(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class SymbolSearchResult(BaseModel):
+    ticker: str
+    name: Optional[str] = None
+
+    class Config:
+        orm_mode = True

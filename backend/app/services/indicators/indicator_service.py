@@ -9,6 +9,8 @@ from app.schemas.indicators import IndicatorPoint
 from app.schemas.stock import CandleDTO
 from app.services.indicators.rsi import compute_rsi
 from app.services.indicators.sma import compute_sma
+from app.services.indicators.ema import compute_ema
+from app.services.indicators.bollinger import compute_bollinger_bands
 
 
 def get_indicator_points(
@@ -17,7 +19,10 @@ def get_indicator_points(
     start: date,
     end: date,
     sma_period: Optional[int],
+    ema_period: Optional[int],
     rsi_period: Optional[int],
+    bb_period: Optional[int] = None,
+    bb_std: Optional[float] = 2.0,
 ) -> List[IndicatorPoint]:
     ticker = symbol.strip().upper()
 
@@ -50,14 +55,27 @@ def get_indicator_points(
     ]
 
     sma_series = compute_sma(candles, sma_period) if sma_period is not None else [None] * len(candles)
+    ema_series = compute_ema(candles, ema_period) if ema_period is not None else [None] * len(candles)
     rsi_series = compute_rsi(candles, rsi_period) if rsi_period is not None else [None] * len(candles)
+    
+    # Compute Bollinger Bands if requested
+    if bb_period is not None:
+        bb_middle, bb_upper, bb_lower = compute_bollinger_bands(candles, bb_period, bb_std or 2.0)
+    else:
+        bb_middle = [None] * len(candles)
+        bb_upper = [None] * len(candles)
+        bb_lower = [None] * len(candles)
 
     return [
         IndicatorPoint(
             date=candles[i].date,
             close=candles[i].close,
             sma=sma_series[i],
+            ema=ema_series[i],
             rsi=rsi_series[i],
+            bb_middle=bb_middle[i],
+            bb_upper=bb_upper[i],
+            bb_lower=bb_lower[i],
         )
         for i in range(len(candles))
     ]

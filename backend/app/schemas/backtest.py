@@ -25,6 +25,7 @@ class BacktestMetrics(BaseModel):
     max_drawdown_pct: float = Field(..., ge=0.0)
     win_rate_pct: float = Field(..., ge=0.0, le=100.0)
     num_trades: int = Field(..., ge=0)
+    sharpe_ratio: Optional[float] = None
 
 
 class BacktestResult(BaseModel):
