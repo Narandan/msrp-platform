@@ -11,6 +11,7 @@ from app.db.models.user import User
 from app.schemas.stock import CandleDTO, SymbolSearchResult
 from app.schemas.stocks import IngestResponse
 from app.services.stocks.ingest_service import ingest_symbol_candles
+from app.services.stocks.symbol_list_service import search_symbols as search_symbols_full
 
 router = APIRouter(prefix="/stocks", tags=["stocks"])
 
@@ -22,6 +23,29 @@ async def stocks_ping() -> dict:
     return {"status": "ok"}
 
 
+def _search_symbols_db(db: Session, query_upper: str, limit: int) -> List[SymbolSearchResult]:
+    """Fallback: search only symbols already in DB (e.g. when external list unavailable)."""
+    stmt = (
+        select(Symbol)
+        .where(Symbol.ticker.ilike(f"{query_upper}%"))
+        .order_by(Symbol.ticker)
+        .limit(limit)
+    )
+    results = list(db.execute(stmt).scalars().all())
+    if len(results) < limit:
+        stmt_contains = (
+            select(Symbol)
+            .where(
+                Symbol.ticker.ilike(f"%{query_upper}%"),
+                ~Symbol.ticker.ilike(f"{query_upper}%"),
+            )
+            .order_by(Symbol.ticker)
+            .limit(limit - len(results))
+        )
+        results.extend(db.execute(stmt_contains).scalars().all())
+    return [SymbolSearchResult(ticker=s.ticker, name=s.name) for s in results]
+
+
 @router.get("/search", response_model=List[SymbolSearchResult])
 def search_symbols(
     q: str = Query(..., min_length=1, description="Search query"),
@@ -30,36 +54,13 @@ def search_symbols(
     _: User = Depends(get_current_user),  # auth required
 ):
     """
-    Search for symbols by ticker.
-    Returns symbols that start with or contain the query string.
-    Increment 1 scope: ticker-only search from known symbols in DB.
+    Search for symbols by ticker across all available NASDAQ/NYSE symbols.
+    When the full list is unavailable (e.g. offline), falls back to symbols in DB.
     """
-    query_upper = q.upper()
-    
-    # Search: starts-with gets priority
-    stmt = (
-        select(Symbol)
-        .where(Symbol.ticker.ilike(f"{query_upper}%"))
-        .order_by(Symbol.ticker)
-        .limit(limit)
-    )
-    
-    results = list(db.execute(stmt).scalars().all())
-    
-    # If not enough results, also search for contains
-    if len(results) < limit:
-        remaining = limit - len(results)
-        stmt_contains = (
-            select(Symbol)
-            .where(
-                Symbol.ticker.ilike(f"%{query_upper}%"),
-                ~Symbol.ticker.ilike(f"{query_upper}%")  # exclude already found
-            )
-            .order_by(Symbol.ticker)
-            .limit(remaining)
-        )
-        results.extend(db.execute(stmt_contains).scalars().all())
-    
+    query_upper = q.strip().upper()
+    results = search_symbols_full(query=q, limit=limit)
+    if not results:
+        results = _search_symbols_db(db, query_upper, limit)
     return results
 
 
