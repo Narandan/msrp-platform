@@ -29,6 +29,9 @@ def indicators(
     rsi_period: Optional[int] = Query(None, ge=1, le=500),
     bb_period: Optional[int] = Query(None, ge=1, le=500),
     bb_std: Optional[float] = Query(2.0, ge=0.1, le=5.0),
+    macd_fast: Optional[int] = Query(None, ge=1, le=500),
+    macd_slow: Optional[int] = Query(None, ge=1, le=500),
+    macd_signal: Optional[int] = Query(None, ge=1, le=500),
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
@@ -42,5 +45,8 @@ def indicators(
         rsi_period=rsi_period,
         bb_period=bb_period,
         bb_std=bb_std,
+        macd_fast=macd_fast,
+        macd_slow=macd_slow,
+        macd_signal=macd_signal,
     )
     return IndicatorsResponse(symbol=symbol.upper(), points=points)

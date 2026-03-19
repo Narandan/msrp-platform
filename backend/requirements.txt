@@ -3,4 +3,8 @@ uvicorn[standard]
 pydantic
 python-dotenv
 httpx
+pytest
+bcrypt
+passlib
+python-jose[cryptography]
 

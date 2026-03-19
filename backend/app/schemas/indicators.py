@@ -12,6 +12,9 @@ class IndicatorPoint(BaseModel):
     bb_middle: Optional[float] = None
     bb_upper: Optional[float] = None
     bb_lower: Optional[float] = None
+    macd: Optional[float] = None
+    macd_signal: Optional[float] = None
+    macd_histogram: Optional[float] = None
 
 
 class IndicatorsResponse(BaseModel):
