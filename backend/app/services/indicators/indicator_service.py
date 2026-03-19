@@ -11,6 +11,7 @@ from app.services.indicators.rsi import compute_rsi
 from app.services.indicators.sma import compute_sma
 from app.services.indicators.ema import compute_ema
 from app.services.indicators.bollinger import compute_bollinger_bands
+from app.services.indicators.macd import compute_macd
 
 
 def get_indicator_points(
@@ -23,6 +24,9 @@ def get_indicator_points(
     rsi_period: Optional[int],
     bb_period: Optional[int] = None,
     bb_std: Optional[float] = 2.0,
+    macd_fast: Optional[int] = None,
+    macd_slow: Optional[int] = None,
+    macd_signal: Optional[int] = None,
 ) -> List[IndicatorPoint]:
     ticker = symbol.strip().upper()
 
@@ -66,6 +70,16 @@ def get_indicator_points(
         bb_upper = [None] * len(candles)
         bb_lower = [None] * len(candles)
 
+    # MACD
+    if macd_fast is not None and macd_slow is not None and macd_signal is not None:
+        macd_line, macd_sig_line, macd_hist = compute_macd(
+            candles, fast_period=macd_fast, slow_period=macd_slow, signal_period=macd_signal
+        )
+    else:
+        macd_line = [None] * len(candles)
+        macd_sig_line = [None] * len(candles)
+        macd_hist = [None] * len(candles)
+
     return [
         IndicatorPoint(
             date=candles[i].date,
@@ -76,6 +90,9 @@ def get_indicator_points(
             bb_middle=bb_middle[i],
             bb_upper=bb_upper[i],
             bb_lower=bb_lower[i],
+            macd=macd_line[i],
+            macd_signal=macd_sig_line[i],
+            macd_histogram=macd_hist[i],
         )
         for i in range(len(candles))
     ]

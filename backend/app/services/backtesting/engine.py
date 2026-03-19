@@ -41,6 +41,7 @@ def run_long_only_all_in_out(
     signals: Sequence[SignalPoint],
     *,
     initial_cash: float = 10_000.0,
+    transaction_cost_pct: float = 0.0,
 ) -> Tuple[List[EquityPoint], List[Trade]]:
     """
     Long-only execution:
@@ -50,9 +51,12 @@ def run_long_only_all_in_out(
 
     Trades execute at the signal day's close.
     Equity is marked-to-market each candle close.
+    transaction_cost_pct: applied per trade as a fraction of notional (e.g. 0.001 = 0.1%).
     """
     if initial_cash <= 0:
         raise ValueError("initial_cash must be > 0")
+    if transaction_cost_pct < 0.0:
+        raise ValueError("transaction_cost_pct must be >= 0")
 
     _validate_candles(candles)
     sig_by_date = _signal_map(signals)
@@ -78,8 +82,8 @@ def run_long_only_all_in_out(
             entry_date = c.date
             entry_price = float(c.close)
             entry_reason = sp.reason if sp is not None else None
-
-            entry_shares = cash / entry_price
+            # Spend cash including transaction cost: shares * price * (1 + cost_pct) = cash
+            entry_shares = cash / (entry_price * (1.0 + transaction_cost_pct)) if transaction_cost_pct > 0 else cash / entry_price
             shares = entry_shares
             cash = 0.0
             in_trade = True
@@ -89,7 +93,7 @@ def run_long_only_all_in_out(
             exit_date = c.date
             exit_price = float(c.close)
 
-            cash = shares * exit_price
+            cash = shares * exit_price * (1.0 - transaction_cost_pct) if transaction_cost_pct > 0 else shares * exit_price
 
             assert entry_date is not None and entry_price is not None
             cost_basis = entry_shares * entry_price

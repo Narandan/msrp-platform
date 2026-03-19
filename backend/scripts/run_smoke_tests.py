@@ -53,7 +53,7 @@ def main() -> None:
     #      - 200 OK (backtest ran)
     #      - 400 with "Symbol not found" (endpoint wiring is correct)
     symbol = "AAPL"
-    path = f"/backtest/{symbol}?start=2023-01-01&end=2023-01-10&sma_period=5&initial_cash=10000"
+    path = f"/backtest/{symbol}?start=2023-01-01&end=2023-01-10&sma_period=5&initial_cash=10000&transaction_cost_pct=0"
 
     url = f"{BASE_URL}{path}"
     print(f"[SMOKE] Checking backtest endpoint → {url}")
@@ -71,6 +71,20 @@ def main() -> None:
     else:
         print(f"  [FAIL] FAILED: status {resp.status_code}, body={resp.text[:200]}")
         raise RuntimeError("Unexpected response from backtest endpoint")
+
+    # 6. Backtest SMA crossover (same symbol/date logic)
+    path_crossover = f"/backtest/{symbol}?start=2023-01-01&end=2023-01-10&strategy=sma_crossover&fast_period=5&slow_period=10&initial_cash=10000"
+    print(f"[SMOKE] Checking backtest sma_crossover → {BASE_URL}{path_crossover}")
+    try:
+        resp2 = requests.get(f"{BASE_URL}{path_crossover}", timeout=10)
+    except Exception as e:
+        print(f"  [FAIL] FAILED: request error: {e}")
+        raise
+    if resp2.status_code in (200, 400) and ("Symbol not found" in resp2.text or resp2.status_code == 200):
+        print("  [OK] OK (sma_crossover endpoint reachable)")
+    else:
+        print(f"  [FAIL] FAILED: status {resp2.status_code}, body={resp2.text[:200]}")
+        raise RuntimeError("Unexpected response from backtest sma_crossover")
 
     print("\n=== All smoke checks completed successfully ===")
 
