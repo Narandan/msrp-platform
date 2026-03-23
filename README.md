@@ -48,7 +48,28 @@ cd backend && source venv/bin/activate
 python -m scripts.run_smoke_tests
 ```
 
-Verifies: `/health`, `/auth/ping`, `/stocks/ping`, `/indicators/ping`, `/backtest/{symbol}` (with optional `transaction_cost_pct` and `strategy=sma_crossover`).
+Checks: `/health`, `/auth/ping`, `/stocks/ping`, `/indicators/ping`, `/backtest/AAPL` (both `sma_threshold` and `sma_crossover`).
+
+Expected output (fresh clone, no data ingested yet):
+
+```
+=== MSRP Backend Smoke Tests ===
+[SMOKE] Checking health check → http://127.0.0.1:8000/health
+  [OK] OK (status 200)
+[SMOKE] Checking auth ping → http://127.0.0.1:8000/auth/ping
+  [OK] OK (status 200)
+[SMOKE] Checking stocks ping → http://127.0.0.1:8000/stocks/ping
+  [OK] OK (status 200)
+[SMOKE] Checking indicators ping → http://127.0.0.1:8000/indicators/ping
+  [OK] OK (status 200)
+[SMOKE] Checking backtest endpoint → ...
+  [OK] OK (endpoint reachable; symbol not yet ingested)
+[SMOKE] Checking backtest sma_crossover → ...
+  [OK] OK (sma_crossover endpoint reachable)
+=== All smoke checks completed successfully ===
+```
+
+A 400 "Symbol not found" on the backtest checks is a **pass** — it means the endpoint is wired correctly, AAPL just hasn't been ingested yet. Once you ingest data the same checks return 200.
 
 ---
 
@@ -83,6 +104,91 @@ Verifies: `/health`, `/auth/ping`, `/stocks/ping`, `/indicators/ping`, `/backtes
 
 - **Smoke:** `backend/scripts/run_smoke_tests.py` (no pytest).
 - **Unit (RSI/MACD):** `cd backend && pytest tests/test_rsi.py tests/test_macd.py -v` (requires `pytest` in venv).
+
+---
+
+## API Reference (curl Examples)
+
+All protected endpoints require a Bearer token. Get one by logging in first:
+
+```bash
+# 1. Register
+curl -s -X POST http://127.0.0.1:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"yourpassword"}'
+
+# 2. Login — copy the access_token from the response
+curl -s -X POST http://127.0.0.1:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@example.com","password":"yourpassword"}'
+
+# Save the token (replace <TOKEN> in all examples below)
+TOKEN="eyJ..."
+```
+
+### Stocks & Search
+
+```bash
+# Ingest OHLCV data for a symbol
+curl -s -X POST "http://127.0.0.1:8000/stocks/AAPL/ingest?start=2024-01-01&end=2024-12-31" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get candles
+curl -s "http://127.0.0.1:8000/stocks/AAPL/candles?limit=10" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Search symbols (online: searches full NASDAQ/NYSE list; offline: falls back to DB only)
+curl -s "http://127.0.0.1:8000/stocks/search?q=AAP" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Watchlist
+
+```bash
+# List watchlist
+curl -s http://127.0.0.1:8000/watchlist \
+  -H "Authorization: Bearer $TOKEN"
+
+# Add symbol (must be ingested first)
+curl -s -X POST http://127.0.0.1:8000/watchlist \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"ticker":"AAPL"}'
+
+# Remove symbol
+curl -s -X DELETE http://127.0.0.1:8000/watchlist/AAPL \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### News
+
+```bash
+# Get latest 5 headlines for a ticker (Google News RSS)
+curl -s "http://127.0.0.1:8000/news/AAPL?limit=5" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Indicators
+
+```bash
+# SMA + EMA + RSI + Bollinger Bands + MACD
+curl -s "http://127.0.0.1:8000/indicators/AAPL?start=2024-01-01&end=2024-12-31&sma_period=20&ema_period=20&rsi_period=14&bb_period=20&macd_fast=12&macd_slow=26&macd_signal=9" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Backtest
+
+`transaction_cost_pct` is a decimal fraction of trade value charged per transaction (e.g. `0.001` = 0.1%, `0.0` = no cost). Valid range: 0.0 – 0.1.
+
+```bash
+# SMA threshold strategy (default)
+curl -s "http://127.0.0.1:8000/backtest/AAPL?start=2024-01-01&end=2024-12-31&strategy=sma_threshold&sma_period=20&initial_cash=10000&transaction_cost_pct=0.001"
+
+# SMA crossover strategy (fast/slow periods)
+curl -s "http://127.0.0.1:8000/backtest/AAPL?start=2024-01-01&end=2024-12-31&strategy=sma_crossover&fast_period=10&slow_period=30&initial_cash=10000&transaction_cost_pct=0.001"
+```
+
+Backtest does not require auth. Returns `equity_curve`, `trades`, and `metrics` (total return, max drawdown, win rate, Sharpe ratio).
 
 ---
 
