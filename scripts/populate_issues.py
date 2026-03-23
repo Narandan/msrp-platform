@@ -83,6 +83,17 @@ def ensure_labels(owner: str, repo: str, token: str, labels: List[Dict[str, Any]
                     json={"new_name": name, "color": color, "description": desc},
                 )
 
+def due_on_utc(date_str: str) -> str:
+    """Convert a YYYY-MM-DD due date (EDT, UTC-4) to an end-of-day UTC ISO string.
+    11:59 PM EDT = 03:59 AM UTC next day, ensuring GitHub never shows it a day early."""
+    from datetime import datetime, timezone, timedelta
+    edt = timezone(timedelta(hours=-4))
+    local_end = datetime.strptime(date_str, "%Y-%m-%d").replace(
+        hour=23, minute=59, second=59, tzinfo=edt
+    )
+    return local_end.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def ensure_milestones(owner: str, repo: str, token: str, milestones: List[Dict[str, Any]]) -> Dict[str, int]:
     # include closed milestones too, so reruns still find them
     existing = paginate(f"{GITHUB_API}/repos/{owner}/{repo}/milestones", token, params={"state": "all"})
@@ -92,15 +103,20 @@ def ensure_milestones(owner: str, repo: str, token: str, milestones: List[Dict[s
     for ms in milestones:
         title = ms["title"]
         desc = ms.get("description", "")
-        state = ms.get("state", "open")  # optional
+        state = ms.get("state", "open")
+        due = ms.get("due_on")
+        desired_due = due_on_utc(due) if due else None
 
         if title not in by_title:
             print(f"Creating milestone: {title}")
+            payload: Dict[str, Any] = {"title": title, "description": desc, "state": state}
+            if desired_due:
+                payload["due_on"] = desired_due
             created = request_json(
                 "POST",
                 f"{GITHUB_API}/repos/{owner}/{repo}/milestones",
                 token,
-                json={"title": title, "description": desc, "state": state},
+                json=payload,
             )
             title_to_number[title] = int(created["number"])
         else:
@@ -108,14 +124,19 @@ def ensure_milestones(owner: str, repo: str, token: str, milestones: List[Dict[s
             number = int(cur["number"])
             title_to_number[title] = number
 
-            # Idempotent update: ensure description/state match desired
+            # Idempotent update: ensure description/state/due_on match desired
             needs = False
-            payload: Dict[str, Any] = {}
+            payload = {}
             if (cur.get("description") or "") != desc:
                 payload["description"] = desc
                 needs = True
             if cur.get("state") != state:
                 payload["state"] = state
+                needs = True
+            # Compare only the date portion to avoid sub-second drift
+            cur_due = (cur.get("due_on") or "")[:10]
+            if desired_due and cur_due != due:
+                payload["due_on"] = desired_due
                 needs = True
             if needs:
                 print(f"Updating milestone: {title}")
