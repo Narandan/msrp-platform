@@ -43,6 +43,7 @@ def ingest_symbol_candles(
 
     inserted = 0
     skipped = 0
+    batch = []
 
     for c in candles:
         row = Candle(
@@ -54,12 +55,23 @@ def ingest_symbol_candles(
             close=c.close,
             volume=c.volume,
         )
+        batch.append(row)
+
+    # Bulk insert with per-row duplicate handling
+    for row in batch:
         db.add(row)
         try:
-            db.commit()
+            db.flush()
             inserted += 1
         except IntegrityError:
             db.rollback()
+            # Re-attach symbol after rollback
+            sym = _get_or_create_symbol(db, canonical_ticker)
             skipped += 1
+
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
 
     return (inserted, skipped, len(candles))

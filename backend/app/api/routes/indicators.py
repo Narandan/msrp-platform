@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_user
@@ -35,6 +35,8 @@ def indicators(
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
+    if start >= end:
+        raise HTTPException(status_code=400, detail="start must be before end")
     points = get_indicator_points(
         db=db,
         symbol=symbol,

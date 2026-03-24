@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
@@ -72,6 +72,9 @@ def ingest(
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),  # auth required
 ):
+    if start >= end:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="start must be before end")
     inserted, skipped, total_seen = ingest_symbol_candles(db=db, symbol=symbol, start=start, end=end)
     return IngestResponse(symbol=symbol.upper(), inserted=inserted, skipped=skipped, total_seen=total_seen)
 
@@ -85,7 +88,7 @@ def list_candles(
 ):
     sym = db.execute(select(Symbol).where(Symbol.ticker == symbol.upper())).scalar_one_or_none()
     if sym is None:
-        return []
+        raise HTTPException(status_code=404, detail=f"Symbol {symbol.upper()} not found. Ingest it first.")
 
     rows = (
         db.execute(

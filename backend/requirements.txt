@@ -1,10 +1,11 @@
 fastapi
 uvicorn[standard]
-pydantic
+pydantic[email]
 python-dotenv
 httpx
 pytest
 bcrypt
 passlib
 python-jose[cryptography]
-
+sqlalchemy
+requests

@@ -5,7 +5,8 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db  # removed get_current_user
+from app.api.deps import get_db, get_current_user
+from app.db.models.user import User
 from app.schemas.backtest import BacktestResult
 from app.services.backtesting.backtest_service import BacktestService
 
@@ -22,9 +23,14 @@ def backtest_symbol(
     fast_period: int = Query(10, ge=1, description="Fast SMA period (sma_crossover)"),
     slow_period: int = Query(20, ge=1, description="Slow SMA period (sma_crossover)"),
     initial_cash: float = Query(10_000.0, gt=0.0, description="Starting cash"),
-    transaction_cost_pct: float = Query(0.0, ge=0.0, le=0.1, description="Transaction cost as decimal (e.g. 0.001 = 0.1%%)"),
-    db: Session = Depends(get_db),  # removed _user dependency
+    transaction_cost_pct: float = Query(0.0, ge=0.0, le=0.1, description="Transaction cost as decimal (e.g. 0.001 = 0.1%)"),
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
 ) -> BacktestResult:
+    if start >= end:
+        raise HTTPException(status_code=400, detail="start must be before end")
+    if strategy not in ("sma_threshold", "sma_crossover"):
+        raise HTTPException(status_code=400, detail=f"Unknown strategy '{strategy}'. Use sma_threshold or sma_crossover.")
     try:
         svc = BacktestService(db)
         if strategy == "sma_crossover":

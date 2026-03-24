@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db.base import Base
 from app.db.session import engine
 import app.db.models  # noqa: F401 - register all models for create_all
+from app.core.config import settings
 from app.api.routes.auth import router as auth_router
 from app.api.routes.stocks import router as stocks_router
 from app.api.routes.indicators import router as indicators_router
@@ -15,7 +16,7 @@ app = FastAPI(title="MSRP Platform", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
