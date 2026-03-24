@@ -118,3 +118,9 @@ msrp-platform/
 ## Increment 1 (Baseline)
 
 Increment 1 delivered the core backend: FastAPI, JWT auth, SQLite, Stooq ingestion, SMA/RSI indicators, and a long-only backtest engine. Increment 2 adds the above API extensions, React frontend, watchlist, news, second strategy, transaction costs, and UI/UX improvements.
+
+##  Increment 2
+
+Increment 2 focused on the frontend, taking th backend only sckeleton from Increment1 and building a working application. Witht the addition of a React frontend, watchlists, news, MACD, Bollinger Bands, EMA, SMA crossover strategy, transaction costs, and symbol autocomplete. Every feature is wired end to end from the UI through authenticated API endpoints to the database.
+link to video: https://youtu.be/0UbBxS7_lxI
+
