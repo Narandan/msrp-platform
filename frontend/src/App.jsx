@@ -1429,6 +1429,8 @@ export default function App() {
     setToken(""); setUserEmail("");
     localStorage.removeItem("msrp_token");
     localStorage.removeItem("msrp_email");
+    localStorage.removeItem("msrp_persist");
+    setPage("home");
   };
 
   const NAV = [

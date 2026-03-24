@@ -48,18 +48,18 @@ def main() -> None:
     _check_endpoint("/indicators/ping", description="indicators ping")
 
     # 5. Backtest:
-    #    For now, we don't know what symbols are ingested on a fresh clone.
-    #    So we accept either:
-    #      - 200 OK (backtest ran)
-    #      - 400 with "Symbol not found" (endpoint wiring is correct)
+    #    Backtest now requires auth. Without a token we expect 401.
+    #    If a token is available (MSRP_TOKEN env var), we also accept 200 or 400 "Symbol not found".
+    import os
+    token = os.environ.get("MSRP_TOKEN", "")
     symbol = "AAPL"
     path = f"/backtest/{symbol}?start=2023-01-01&end=2023-01-10&sma_period=5&initial_cash=10000&transaction_cost_pct=0"
-
     url = f"{BASE_URL}{path}"
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
     print(f"[SMOKE] Checking backtest endpoint → {url}")
 
     try:
-        resp = requests.get(url, timeout=10)
+        resp = requests.get(url, headers=headers, timeout=10)
     except Exception as e:
         print(f"  [FAIL] FAILED: request error: {e}")
         raise
@@ -68,6 +68,8 @@ def main() -> None:
         print("  [OK] OK (backtest returned 200)")
     elif resp.status_code == 400 and "Symbol not found" in resp.text:
         print("  [OK] OK (endpoint reachable; symbol not yet ingested)")
+    elif resp.status_code == 401 and not token:
+        print("  [OK] OK (endpoint reachable; auth required as expected)")
     else:
         print(f"  [FAIL] FAILED: status {resp.status_code}, body={resp.text[:200]}")
         raise RuntimeError("Unexpected response from backtest endpoint")
@@ -76,12 +78,16 @@ def main() -> None:
     path_crossover = f"/backtest/{symbol}?start=2023-01-01&end=2023-01-10&strategy=sma_crossover&fast_period=5&slow_period=10&initial_cash=10000"
     print(f"[SMOKE] Checking backtest sma_crossover → {BASE_URL}{path_crossover}")
     try:
-        resp2 = requests.get(f"{BASE_URL}{path_crossover}", timeout=10)
+        resp2 = requests.get(f"{BASE_URL}{path_crossover}", headers=headers, timeout=10)
     except Exception as e:
         print(f"  [FAIL] FAILED: request error: {e}")
         raise
-    if resp2.status_code in (200, 400) and ("Symbol not found" in resp2.text or resp2.status_code == 200):
+    if resp2.status_code == 200:
         print("  [OK] OK (sma_crossover endpoint reachable)")
+    elif resp2.status_code == 400 and "Symbol not found" in resp2.text:
+        print("  [OK] OK (sma_crossover endpoint reachable; symbol not yet ingested)")
+    elif resp2.status_code == 401 and not token:
+        print("  [OK] OK (sma_crossover endpoint reachable; auth required as expected)")
     else:
         print(f"  [FAIL] FAILED: status {resp2.status_code}, body={resp2.text[:200]}")
         raise RuntimeError("Unexpected response from backtest sma_crossover")

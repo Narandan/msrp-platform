@@ -14,13 +14,11 @@ class CandleDTO(BaseModel):
     close: float
     volume: Optional[int] = None
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 
 class SymbolSearchResult(BaseModel):
     ticker: str
     name: Optional[str] = None
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}

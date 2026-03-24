@@ -46,6 +46,16 @@ milestones:
     description: "MSRP Increment 1 deliverables + stable demo scope"
     state: "open"
 
+  - title: "Increment 2"
+    description: "MSRP Increment 2 deliverables"
+    due_on: "2026-03-23"
+    state: "open"
+
+  - title: "Increment 3"
+    description: "MSRP Increment 3 deliverables"
+    due_on: "2026-04-27"
+    state: "open"
+
 issues:
   - id: "MSRP-INC1-001"
     title: "Auth system (register/login/me) with JWT + hashed passwords"
