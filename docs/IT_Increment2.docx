@@ -1,0 +1,6 @@
+Purpose:
+•	Calculate technical indicators (SMA, RSI)
+•	Perform numerical computations
+•	Structure historical price data
+•	Support backtesting calculations
+These libraries were chosen because they are industry-standard tools for quantitative analysis in Python.
