@@ -7,4 +7,5 @@ pytest
 bcrypt
 passlib
 python-jose[cryptography]
+email-validator
 
