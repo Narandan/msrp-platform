@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class CandleDTO(BaseModel):
@@ -14,11 +14,19 @@ class CandleDTO(BaseModel):
     close: float
     volume: Optional[int] = None
 
+<<<<<<< HEAD
     model_config = {"from_attributes": True}
+=======
+    model_config = ConfigDict(from_attributes=True)
+>>>>>>> Increment2
 
 
 class SymbolSearchResult(BaseModel):
     ticker: str
     name: Optional[str] = None
 
+<<<<<<< HEAD
     model_config = {"from_attributes": True}
+=======
+    model_config = ConfigDict(from_attributes=True)
+>>>>>>> Increment2

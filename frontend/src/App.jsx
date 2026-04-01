@@ -405,7 +405,9 @@ function setPersist(update) {
   try {
     const next = { ...getPersist(), ...update };
     localStorage.setItem(PERSIST_KEY, JSON.stringify(next));
-  } catch (_) {}
+  } catch {
+    return;
+  }
 }
 
 function trackRecentSymbol(symbol) {
@@ -463,10 +465,6 @@ function formatCountdown(totalMins) {
   const m = Math.round(totalMins % 60);
   if (h > 0) return `${h}h ${m}m`;
   return `${m}m`;
-}
-
-function isMarketOpen() {
-  return getMarketStatus().open;
 }
 
 async function apiFetch(path, token, opts = {}) {
@@ -811,7 +809,7 @@ function IndicatorsPage({ token }) {
   const [end, setEnd] = useState(p.end ?? new Date().toISOString().slice(0, 10));
   const [smaPeriod, setSmaPeriod] = useState(p.smaPeriod ?? 20);
   const [emaPeriod, setEmaPeriod] = useState(p.emaPeriod ?? 20);
-  const [rsiPeriod, setRsiPeriod] = useState(p.rsiPeriod ?? 14);
+  const [rsiPeriod] = useState(p.rsiPeriod ?? 14);
   const [bbPeriod, setBbPeriod] = useState(p.bbPeriod ?? 20);
   const [showSma, setShowSma] = useState(p.showSma !== false);
   const [showEma, setShowEma] = useState(p.showEma ?? false);
@@ -940,12 +938,27 @@ function NewsPanel({ symbol, token }) {
   const [err, setErr] = useState(null);
 
   useEffect(() => {
-    if (!symbol) { setArticles([]); setErr(null); return; }
-    setLoading(true); setErr(null);
-    apiFetch(`/news/${encodeURIComponent(symbol)}?limit=8`, token)
-      .then(d => { setArticles(d.articles || []); setErr(null); })
-      .catch(e => { setErr(e.message); setArticles([]); })
-      .finally(() => setLoading(false));
+    if (!symbol) return;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setLoading(true); setErr(null);
+      apiFetch(`/news/${encodeURIComponent(symbol)}?limit=8`, token)
+        .then(d => {
+          if (cancelled) return;
+          setArticles(d.articles || []);
+          setErr(null);
+        })
+        .catch(e => {
+          if (cancelled) return;
+          setErr(e.message);
+          setArticles([]);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    });
+    return () => { cancelled = true; };
   }, [symbol, token]);
 
   if (!symbol) return null;
@@ -1418,20 +1431,34 @@ export default function App() {
     setPersist({ page });
   }, [page]);
 
-  const onAuth = (t, email) => {
+  const onAuth = useCallback((t, email) => {
     setToken(t); setUserEmail(email);
     localStorage.setItem("msrp_token", t);
     localStorage.setItem("msrp_email", email);
     setPage("home");
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setToken(""); setUserEmail("");
     localStorage.removeItem("msrp_token");
     localStorage.removeItem("msrp_email");
+<<<<<<< HEAD
     localStorage.removeItem("msrp_persist");
     setPage("home");
   };
+=======
+  }, []);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    apiFetch("/auth/me", token)
+      .catch(() => {
+        if (!cancelled) logout();
+      });
+    return () => { cancelled = true; };
+  }, [token, logout]);
+>>>>>>> Increment2
 
   const NAV = [
     { id: "home", label: "Dashboard", icon: "⬡" },
