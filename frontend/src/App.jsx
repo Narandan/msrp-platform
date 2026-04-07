@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { STYLE } from "./styles/styles.js";
 import { getPersist, setPersist, apiFetch } from "./utils/Helpers.js";
 import { AuthPage } from "./pages/AuthPage";
@@ -32,7 +34,8 @@ export default function App() {
     setPage("home");
   }, []);
 
-  const logout = useCallback(() => {
+  // Update: Toast added to logout logic, message is optional, provided from session expiration.
+  const logout = useCallback((message) => {
     setToken(""); setUserEmail("");
     localStorage.removeItem("msrp_token");
     localStorage.removeItem("msrp_email");
@@ -40,6 +43,9 @@ export default function App() {
     // Watch for these in the future. 
     localStorage.removeItem("msrp_persist");
     setPage("home");
+    if (message) {
+      toast.error(message);
+    }
   }, []);
 
   useEffect(() => {
@@ -47,7 +53,7 @@ export default function App() {
     let cancelled = false;
     apiFetch("/auth/me", token)
       .catch(() => {
-        if (!cancelled) logout();
+        if (!cancelled) logout("Session expired, please sign in again"); // Update: Added message to logout call for expiration
       });
     return () => { cancelled = true; };
   }, [token, logout]);
@@ -117,6 +123,7 @@ export default function App() {
           </div>
         )}
       </div>
+      <ToastContainer />
     </>
   );
 }
