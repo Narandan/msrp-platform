@@ -7,10 +7,6 @@ pytest
 bcrypt
 passlib
 python-jose[cryptography]
-<<<<<<< HEAD
 sqlalchemy
 requests
-=======
 email-validator
-
->>>>>>> Increment2
