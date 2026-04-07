@@ -27,6 +27,7 @@ jobs:
           --exclude-dir=venv \
           --exclude-dir=docs \
           --exclude=README* \
+          --exclude=ci.yml \
           --exclude-dir=__pycache__; then
 
           echo "ERROR: Unresolved merge conflict markers found."
@@ -40,6 +41,7 @@ jobs:
           --exclude-dir=venv \
           --exclude-dir=docs \
           --exclude=README* \
+          --exclude=ci.yml \
           --exclude-dir=__pycache__; then
 
           echo "ERROR: Unresolved merge conflict markers found."
@@ -53,6 +55,7 @@ jobs:
           --exclude-dir=venv \
           --exclude-dir=docs \
           --exclude=README* \
+          --exclude=ci.yml \
           --exclude-dir=__pycache__; then
 
           echo "ERROR: Unresolved merge conflict markers found."
