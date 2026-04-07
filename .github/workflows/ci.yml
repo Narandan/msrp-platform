@@ -1,0 +1,62 @@
+# ci.yml will run on pushes and PRs to main branch, and if any merge conflict "markers" are found,
+# ci.yml will output an error along with where the markers are found.
+
+# Note: DO NOT MOVE THIS FILE. It must be in .github/workflows/, and it will work serverwide, not just for each codespace.
+# Note 2: Due to my lack of experience with ripgrep, I decided to go with standard grep. In the future, if speed becomes an issue,
+# we can switch to ripgrep. -Logan B
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  checkConflicts:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check for merge conflict markers
+      run: |
+
+        if grep -R -n "<<<<<<< " . \
+          --exclude-dir=.git \
+          --exclude-dir=node_modules \
+          --exclude-dir=.next \
+          --exclude-dir=venv \
+          --exclude-dir=docs \
+          --exclude=README* \
+          --exclude-dir=__pycache__; then
+
+          echo "ERROR: Unresolved merge conflict markers found."
+          exit 1
+        fi
+
+        if grep -R -n "^=======$" . \
+          --exclude-dir=.git \
+          --exclude-dir=node_modules \
+          --exclude-dir=.next \
+          --exclude-dir=venv \
+          --exclude-dir=docs \
+          --exclude=README* \
+          --exclude-dir=__pycache__; then
+
+          echo "ERROR: Unresolved merge conflict markers found."
+          exit 1
+        fi
+
+        if grep -R -n "^>>>>>>> " . \
+          --exclude-dir=.git \
+          --exclude-dir=node_modules \
+          --exclude-dir=.next \
+          --exclude-dir=venv \
+          --exclude-dir=docs \
+          --exclude=README* \
+          --exclude-dir=__pycache__; then
+
+          echo "ERROR: Unresolved merge conflict markers found."
+          exit 1
+        fi
+
+        echo "No merge conflict markers found."
