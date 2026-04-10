@@ -1,3 +1,8 @@
+# Check for dependencies happens before imports so it will run in time, however,
+# this means that if there are missing dependencies, this error will show at the top of the error pile.
+from app.core.preflight import checkInstalls
+checkInstalls()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
