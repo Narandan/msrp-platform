@@ -26,6 +26,14 @@ app.add_middleware(
 def health():
     return {"status": "ok"}
 
+@app.get("/")
+def root():
+    return {
+        "server": app.title,
+        "version": app.version,
+        "docs": "/docs",
+        "health": "/health"
+    }
 
 @app.on_event("startup")
 def on_startup():
