@@ -50,5 +50,9 @@ jobs:
         python run_smoke_tests.py
 
     - name: Close backend server
+      # This ensures that the backend server is closed even if the smoke tests fail.
+      if: always()
+      working-directory: ./backend
       run: |
         kill $(cat backend_pid.txt)
+        echo "Backend server closed."
