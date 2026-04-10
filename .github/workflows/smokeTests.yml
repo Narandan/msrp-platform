@@ -26,7 +26,7 @@ jobs:
     - name: Start backend server
       working-directory: ./backend
       run: |
-        uvicorn app.main:app --host 0.0.0.0 --port 5173 &
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 &
         echo $! > backend_pid.txt
 
     # On the use of curl, > /dev/null is to remove the output of curl.
@@ -34,7 +34,7 @@ jobs:
     - name: Stall for backend server to start
       run: | 
         for i in {1..5}; do
-          if curl -s http://localhost:5173/health > /dev/null; then 
+          if curl -s http://localhost:8000/health > /dev/null; then 
             echo "Backend server is up!"
             exit 0
           fi
