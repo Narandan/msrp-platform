@@ -1,0 +1,54 @@
+name: Automated Smoke Test
+# Short explanation: This workflow will automatically run the backend server and smoke tests on a vm when a PR is made to the main branch. 
+# Issue 50 says run on PRs but I'll add push logic just to be sure. - Logan B
+on: 
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ] 
+
+jobs: 
+  smokeTest:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Python requirement
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies 
+      working-directory: ./backend
+      run: pip install -r requirements.txt
+
+    - name: Start backend server
+      working-directory: ./backend
+      run: |
+        uvicorn app.main:app --host 0.0.0.0 --port 5173 &
+        echo $! > backend_pid.txt
+
+    # On the use of curl, > /dev/null is to remove the output of curl.
+    # This block will wait for the server to start by checking /health every 5 or so seconds. Realistically, it shouldn't take more than 5-10 seconds.
+    - name: Stall for backend server to start
+      run: | 
+        for i in {1..5}; do
+          if curl -s http://localhost:5173/health > /dev/null; then 
+            echo "Backend server is up!"
+            exit 0
+          fi
+            echo "Waiting for backend server to start..."
+            sleep 5
+        done
+        echo "API failed to start."
+        exit 1
+
+    - name: Run smoke tests
+      working-directory: ./backend/scripts
+      run: |
+        python run_smoke_tests.py
+
+    - name: Close backend server
+      run: |
+        kill $(cat backend_pid.txt)
