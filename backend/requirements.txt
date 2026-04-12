@@ -10,3 +10,5 @@ python-jose[cryptography]
 sqlalchemy
 requests
 email-validator
+scikit-learn>=1.4.0
+numpy>=1.26.0

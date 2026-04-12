@@ -11,6 +11,7 @@ from app.api.routes.indicators import router as indicators_router
 from app.api.routes.backtest import router as backtest_router
 from app.api.routes.news import router as news_router
 from app.api.routes.watchlist import router as watchlist_router
+from app.api.routes.ml import router as ml_router
 
 app = FastAPI(title="MSRP Platform", version="0.1.0")
 
@@ -37,3 +38,4 @@ app.include_router(indicators_router)
 app.include_router(backtest_router)
 app.include_router(news_router)
 app.include_router(watchlist_router)
+app.include_router(ml_router)

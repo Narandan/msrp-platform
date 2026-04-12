@@ -221,3 +221,5 @@ __pycache__/
 backend/msrp.db
 .DS_Store
 **/.DS_Store
+*.pkl
+backend/models/
