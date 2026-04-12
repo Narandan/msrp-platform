@@ -1,5 +1,5 @@
 from datetime import date
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -35,3 +35,21 @@ class BacktestResult(BaseModel):
     equity_curve: List[EquityPoint]
     trades: List[Trade]
     metrics: BacktestMetrics
+
+
+class OptimizeRequest(BaseModel):
+    symbol: str
+    strategy: str
+    start: date
+    end: date
+    param_grid: dict[str, list[Union[int, float]]]
+    top_n: int = Field(5, ge=1, le=20)
+    initial_cash: float = Field(10_000.0, gt=0)
+
+
+class OptimizeResult(BaseModel):
+    params: dict[str, Union[int, float]]
+    sharpe_ratio: float
+    total_return_pct: float
+    max_drawdown_pct: float
+    num_trades: int

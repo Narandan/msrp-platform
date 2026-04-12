@@ -7,10 +7,26 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_user
 from app.db.models.user import User
-from app.schemas.backtest import BacktestResult
+from app.schemas.backtest import BacktestResult, OptimizeRequest, OptimizeResult
 from app.services.backtesting.backtest_service import BacktestService
+from app.services.backtesting.optimizer import OptimizerService
 
 router = APIRouter(prefix="/backtest", tags=["backtest"])
+
+
+@router.post("/optimize", response_model=list[OptimizeResult])
+def optimize_backtest(
+    body: OptimizeRequest,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[OptimizeResult]:
+    if body.start >= body.end:
+        raise HTTPException(status_code=400, detail="start must be before end")
+    try:
+        svc = OptimizerService(db)
+        return svc.run_grid_search(body)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/{symbol}", response_model=BacktestResult)
