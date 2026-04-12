@@ -1,6 +1,7 @@
+from __future__ import annotations
 from itertools import product
 from datetime import date
-from typing import Any
+from typing import Any, List, Dict
 
 from sqlalchemy.orm import Session
 
@@ -23,7 +24,7 @@ class OptimizerService:
         self.db = db
         self.svc = BacktestService(db)
 
-    def run_grid_search(self, req: OptimizeRequest) -> list[OptimizeResult]:
+    def run_grid_search(self, req: OptimizeRequest) -> List[OptimizeResult]:
         if req.strategy not in STRATEGY_PARAMS:
             raise ValueError(f"Unknown strategy '{req.strategy}'. Supported: {list(STRATEGY_PARAMS.keys())}")
 
@@ -53,9 +54,9 @@ class OptimizerService:
         }
         run_fn = dispatch[req.strategy]
 
-        results: list[OptimizeResult] = []
+        results: List[OptimizeResult] = []
         for combo in combos:
-            combo_kwargs: dict[str, Any] = dict(zip(keys, combo))
+            combo_kwargs: Dict[str, Any] = dict(zip(keys, combo))
             try:
                 result = run_fn(
                     symbol=req.symbol,

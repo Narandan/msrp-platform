@@ -3,14 +3,12 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class SignalPoint(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     date: date
     signal: int
     reason: Optional[str] = None
-
-    class Config:
-        # For Pydantic v2, 'orm_mode' is now 'from_attributes'
-        from_attributes = True

@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import List
 from pydantic import BaseModel
 import os
 import sys
@@ -10,7 +12,7 @@ class Settings(BaseModel):
     JWT_SECRET: str = _DEFAULT_SECRET
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
-    CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174"]
+    CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174"]
 
 
 def get_settings() -> Settings:
