@@ -26,6 +26,8 @@ class BacktestMetrics(BaseModel):
     win_rate_pct: float = Field(..., ge=0.0, le=100.0)
     num_trades: int = Field(..., ge=0)
     sharpe_ratio: Optional[float] = None
+    sortino_ratio: Optional[float] = None
+    calmar_ratio: Optional[float] = None
 
 
 class BacktestResult(BaseModel):

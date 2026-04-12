@@ -1,4 +1,4 @@
-"""Unit tests for backtest metrics (total return, drawdown, win rate, Sharpe)."""
+"""Unit tests for backtest metrics (total return, drawdown, win rate, Sharpe, Sortino, Calmar)."""
 from datetime import date, timedelta
 import pytest
 
@@ -9,6 +9,8 @@ from app.services.backtesting.metrics import (
     _max_drawdown_pct,
     _win_rate_pct,
     _sharpe_ratio,
+    _sortino_ratio,
+    _calmar_ratio,
 )
 
 
@@ -130,3 +132,54 @@ def test_compute_metrics_returns_all_fields():
     assert m.win_rate_pct == pytest.approx(_win_rate_pct(trades))
     assert m.num_trades == 3
     assert isinstance(m.sharpe_ratio, float)
+    assert isinstance(m.sortino_ratio, float)
+    assert isinstance(m.calmar_ratio, float)
+
+
+# --- Sortino ratio ---
+
+def test_sortino_empty():
+    assert _sortino_ratio([]) == 0.0
+
+
+def test_sortino_single_point():
+    assert _sortino_ratio(_equity([1000])) == 0.0
+
+
+def test_sortino_no_downside_returns():
+    # All gains — no negative returns, so sortino = 0.0
+    assert _sortino_ratio(_equity([1000, 1010, 1020, 1030])) == 0.0
+
+
+def test_sortino_mixed_returns_positive():
+    # Mixed up/down equity — should yield a positive float
+    values = [1000, 1050, 980, 1100, 1020, 1150, 1080, 1200]
+    result = _sortino_ratio(_equity(values))
+    assert isinstance(result, float)
+    assert result > 0
+
+
+# --- Calmar ratio ---
+
+def test_calmar_empty():
+    assert _calmar_ratio([]) == 0.0
+
+
+def test_calmar_single_point():
+    assert _calmar_ratio(_equity([1000])) == 0.0
+
+
+def test_calmar_zero_drawdown():
+    # Monotonically increasing — max drawdown is 0, so calmar = 0.0
+    assert _calmar_ratio(_equity([1000, 1100, 1200, 1300])) == 0.0
+
+
+def test_calmar_nonzero_drawdown():
+    # Equity goes up then down — should yield a positive float
+    base = date(2020, 1, 1)
+    values = [1000, 1200, 900, 1100]
+    # Spread over ~1 year
+    curve = [EquityPoint(date=base + timedelta(days=i * 120), equity=v) for i, v in enumerate(values)]
+    result = _calmar_ratio(curve)
+    assert isinstance(result, float)
+    assert result != 0.0
