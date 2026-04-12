@@ -28,6 +28,7 @@ class BacktestMetrics(BaseModel):
     sharpe_ratio: Optional[float] = None
     sortino_ratio: Optional[float] = None
     calmar_ratio: Optional[float] = None
+    cagr_pct: Optional[float] = None
 
 
 class BacktestResult(BaseModel):

@@ -136,6 +136,21 @@ def _sortino_ratio(equity_curve: List[EquityPoint], risk_free_rate: float = 0.0)
     return float(((mean_return - daily_rf) / downside_std) * sqrt(252))
 
 
+def _cagr_pct(equity_curve: List[EquityPoint]) -> float:
+    """CAGR: (end_equity / start_equity) ^ (1 / years) - 1, expressed as %."""
+    if len(equity_curve) < 2:
+        return 0.0
+    start_equity = float(equity_curve[0].equity)
+    end_equity = float(equity_curve[-1].equity)
+    if start_equity <= 0.0:
+        return 0.0
+    days = (equity_curve[-1].date - equity_curve[0].date).days
+    years = days / 365.25
+    if years <= 0.0:
+        return 0.0
+    return ((end_equity / start_equity) ** (1.0 / years) - 1.0) * 100.0
+
+
 def _calmar_ratio(equity_curve: List[EquityPoint]) -> float:
     """Calmar ratio: annualized return / max drawdown."""
     if len(equity_curve) < 2:
@@ -164,4 +179,5 @@ def compute_metrics(*, equity_curve: List[EquityPoint], trades: List[Trade]) -> 
         sharpe_ratio=float(_sharpe_ratio(equity_curve)),
         sortino_ratio=float(_sortino_ratio(equity_curve)),
         calmar_ratio=float(_calmar_ratio(equity_curve)),
+        cagr_pct=float(_cagr_pct(equity_curve)),
     )

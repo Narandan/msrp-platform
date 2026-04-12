@@ -11,6 +11,7 @@ from app.services.backtesting.metrics import (
     _sharpe_ratio,
     _sortino_ratio,
     _calmar_ratio,
+    _cagr_pct,
 )
 
 
@@ -183,3 +184,60 @@ def test_calmar_nonzero_drawdown():
     result = _calmar_ratio(curve)
     assert isinstance(result, float)
     assert result != 0.0
+
+
+# --- CAGR ---
+
+def test_cagr_empty():
+    assert _cagr_pct([]) == 0.0
+
+
+def test_cagr_single_point():
+    assert _cagr_pct([EquityPoint(date=date(2020, 1, 1), equity=1000)]) == 0.0
+
+
+def test_cagr_same_start_end_date():
+    pts = [
+        EquityPoint(date=date(2020, 1, 1), equity=1000),
+        EquityPoint(date=date(2020, 1, 1), equity=1200),
+    ]
+    assert _cagr_pct(pts) == 0.0
+
+
+def test_cagr_zero_start_equity():
+    pts = [
+        EquityPoint(date=date(2020, 1, 1), equity=0),
+        EquityPoint(date=date(2022, 1, 1), equity=1200),
+    ]
+    assert _cagr_pct(pts) == 0.0
+
+
+def test_cagr_multi_year():
+    # 1000 -> 1210 over exactly 2 years: CAGR = (1210/1000)^(1/2) - 1 = 10%
+    pts = [
+        EquityPoint(date=date(2020, 1, 1), equity=1000),
+        EquityPoint(date=date(2022, 1, 1), equity=1210),
+    ]
+    result = _cagr_pct(pts)
+    assert result == pytest.approx(10.0, rel=1e-3)
+
+
+def test_cagr_sub_year():
+    # 1000 -> 1050 over ~6 months: should be a positive float
+    pts = [
+        EquityPoint(date=date(2020, 1, 1), equity=1000),
+        EquityPoint(date=date(2020, 7, 1), equity=1050),
+    ]
+    result = _cagr_pct(pts)
+    assert isinstance(result, float)
+    assert result > 0.0
+
+
+def test_compute_metrics_includes_cagr():
+    equity = [
+        EquityPoint(date=date(2020, 1, 1), equity=1000),
+        EquityPoint(date=date(2022, 1, 1), equity=1210),
+    ]
+    m = compute_metrics(equity_curve=equity, trades=[])
+    assert isinstance(m.cagr_pct, float)
+    assert m.cagr_pct == pytest.approx(10.0, rel=1e-3)
