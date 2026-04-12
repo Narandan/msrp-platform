@@ -18,10 +18,13 @@ def backtest_symbol(
     symbol: str,
     start: date = Query(..., description="Start date (YYYY-MM-DD)"),
     end: date = Query(..., description="End date (YYYY-MM-DD)"),
-    strategy: str = Query("sma_threshold", description="Strategy: sma_threshold or sma_crossover"),
+    strategy: str = Query("sma_threshold", description="Strategy: sma_threshold, sma_crossover, or rsi_threshold"),
     sma_period: int = Query(20, ge=1, description="SMA period (sma_threshold)"),
     fast_period: int = Query(10, ge=1, description="Fast SMA period (sma_crossover)"),
     slow_period: int = Query(20, ge=1, description="Slow SMA period (sma_crossover)"),
+    rsi_period: int = Query(14, ge=1, description="RSI period (rsi_threshold)"),
+    oversold: float = Query(30.0, ge=0.0, le=100.0, description="RSI oversold threshold (rsi_threshold)"),
+    overbought: float = Query(70.0, ge=0.0, le=100.0, description="RSI overbought threshold (rsi_threshold)"),
     initial_cash: float = Query(10_000.0, gt=0.0, description="Starting cash"),
     transaction_cost_pct: float = Query(0.0, ge=0.0, le=0.1, description="Transaction cost as decimal (e.g. 0.001 = 0.1%)"),
     db: Session = Depends(get_db),
@@ -29,10 +32,21 @@ def backtest_symbol(
 ) -> BacktestResult:
     if start >= end:
         raise HTTPException(status_code=400, detail="start must be before end")
-    if strategy not in ("sma_threshold", "sma_crossover"):
-        raise HTTPException(status_code=400, detail=f"Unknown strategy '{strategy}'. Use sma_threshold or sma_crossover.")
+    if strategy not in ("sma_threshold", "sma_crossover", "rsi_threshold"):
+        raise HTTPException(status_code=400, detail=f"Unknown strategy '{strategy}'. Use sma_threshold, sma_crossover, or rsi_threshold.")
     try:
         svc = BacktestService(db)
+        if strategy == "rsi_threshold":
+            return svc.run_rsi_threshold_backtest(
+                symbol=symbol,
+                start=start,
+                end=end,
+                rsi_period=rsi_period,
+                oversold=oversold,
+                overbought=overbought,
+                initial_cash=initial_cash,
+                transaction_cost_pct=transaction_cost_pct,
+            )
         if strategy == "sma_crossover":
             return svc.run_sma_crossover_backtest(
                 symbol=symbol,
