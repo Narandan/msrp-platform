@@ -18,11 +18,14 @@ def backtest_symbol(
     symbol: str,
     start: date = Query(..., description="Start date (YYYY-MM-DD)"),
     end: date = Query(..., description="End date (YYYY-MM-DD)"),
-    strategy: str = Query("sma_threshold", description="Strategy: sma_threshold, sma_crossover, or rsi_threshold"),
+    strategy: str = Query("sma_threshold", description="Strategy: sma_threshold, sma_crossover, rsi_threshold, or macd_crossover"),
     sma_period: int = Query(20, ge=1, description="SMA period (sma_threshold)"),
     fast_period: int = Query(10, ge=1, description="Fast SMA period (sma_crossover)"),
     slow_period: int = Query(20, ge=1, description="Slow SMA period (sma_crossover)"),
     rsi_period: int = Query(14, ge=1, description="RSI period (rsi_threshold)"),
+    macd_fast: int = Query(12, ge=1, description="MACD fast period"),
+    macd_slow: int = Query(26, ge=1, description="MACD slow period"),
+    macd_signal: int = Query(9, ge=1, description="MACD signal period"),
     oversold: float = Query(30.0, ge=0.0, le=100.0, description="RSI oversold threshold (rsi_threshold)"),
     overbought: float = Query(70.0, ge=0.0, le=100.0, description="RSI overbought threshold (rsi_threshold)"),
     initial_cash: float = Query(10_000.0, gt=0.0, description="Starting cash"),
@@ -32,10 +35,21 @@ def backtest_symbol(
 ) -> BacktestResult:
     if start >= end:
         raise HTTPException(status_code=400, detail="start must be before end")
-    if strategy not in ("sma_threshold", "sma_crossover", "rsi_threshold"):
-        raise HTTPException(status_code=400, detail=f"Unknown strategy '{strategy}'. Use sma_threshold, sma_crossover, or rsi_threshold.")
+    if strategy not in ("sma_threshold", "sma_crossover", "rsi_threshold", "macd_crossover"):
+        raise HTTPException(status_code=400, detail=f"Unknown strategy '{strategy}'. Use sma_threshold, sma_crossover, rsi_threshold, or macd_crossover.")
     try:
         svc = BacktestService(db)
+        if strategy == "macd_crossover":
+            return svc.run_macd_crossover_backtest(
+                symbol=symbol,
+                start=start,
+                end=end,
+                fast_period=macd_fast,
+                slow_period=macd_slow,
+                signal_period=macd_signal,
+                initial_cash=initial_cash,
+                transaction_cost_pct=transaction_cost_pct,
+            )
         if strategy == "rsi_threshold":
             return svc.run_rsi_threshold_backtest(
                 symbol=symbol,
