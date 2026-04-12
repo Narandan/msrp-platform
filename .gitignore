@@ -201,6 +201,9 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+# Kiro IDE
+.kiro/
+
 # Marimo
 marimo/_static/
 marimo/_lsp/
