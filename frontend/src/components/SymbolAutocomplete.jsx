@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { apiFetch } from "../utils/Helpers.js";
+import { apiFetch, isSessionExpiredError } from "../utils/Helpers.js";
 
 // ─── SYMBOL AUTOCOMPLETE (reusable) ────────────────────────────────────────────
 // Refactoring: Autocomplete should remain its own file, due to both length and maintainability.
@@ -19,7 +19,10 @@ function SymbolAutocomplete({ value, onChange, placeholder = "AAPL", token, disa
     try {
       const res = await apiFetch(`/stocks/search?q=${encodeURIComponent(query)}&limit=${SEARCH_LIMIT}`, token);
       setSuggestions(res);
-    } catch { setSuggestions([]); }
+    } catch (e) {
+      if (isSessionExpiredError(e)) return;
+      setSuggestions([]);
+    }
     finally { setLoading(false); }
   }, [token]);
 

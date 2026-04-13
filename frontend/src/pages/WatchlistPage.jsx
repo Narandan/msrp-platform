@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { apiFetch } from "../utils/Helpers.js";
+import { apiFetch, isSessionExpiredError } from "../utils/Helpers.js";
 
 // ─── WATCHLIST PAGE ───────────────────────────────────────────────────────────
 // Refactoring: Any changes to the original made I will mark with comments.
@@ -16,7 +16,10 @@ function WatchlistPage({ token }) {
     try {
       const data = await apiFetch("/watchlist", token);
       setSymbols(data.symbols || []);
-    } catch (e) { setErr(e.message); setSymbols([]); }
+    } catch (e) {
+      if (isSessionExpiredError(e)) return;
+      setErr(e.message); setSymbols([]);
+    }
     finally { setLoading(false); }
   }, [token]);
 
@@ -30,7 +33,10 @@ function WatchlistPage({ token }) {
       await apiFetch("/watchlist", token, { method: "POST", body: JSON.stringify({ ticker: t }) });
       setAddTicker("");
       load();
-    } catch (e) { setErr(e.message); }
+    } catch (e) {
+      if (isSessionExpiredError(e)) return;
+      setErr(e.message);
+    }
     finally { setAddLoading(false); }
   };
 
@@ -38,7 +44,10 @@ function WatchlistPage({ token }) {
     try {
       await apiFetch(`/watchlist/${encodeURIComponent(ticker)}`, token, { method: "DELETE" });
       load();
-    } catch (e) { setErr(e.message); }
+    } catch (e) {
+      if (isSessionExpiredError(e)) return;
+      setErr(e.message);
+    }
   };
 
   return (

@@ -4,7 +4,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, ReferenceLine, ComposedChart
 } from "recharts";
-import { getPersist, setPersist, apiFetch, trackRecentSymbol } from "../utils/Helpers.js";
+import { getPersist, setPersist, apiFetch, trackRecentSymbol, isSessionExpiredError } from "../utils/Helpers.js";
 import { SymbolAutocomplete } from "../components/SymbolAutocomplete";
 import { ChartTip } from "../components/ChartTip";
 
@@ -44,7 +44,10 @@ function IndicatorsPage({ token }) {
       const d = await apiFetch(url, token);
       setData(d);
       trackRecentSymbol(symbol);
-    } catch (e) { setErr(e.message); }
+    } catch (e) {
+      if (isSessionExpiredError(e)) return;
+      setErr(e.message);
+    }
     finally { setLoading(false); }
   };
 

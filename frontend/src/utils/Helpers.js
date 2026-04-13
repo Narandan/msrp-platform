@@ -80,6 +80,18 @@ function formatCountdown(totalMins) {
   return `${m}m`;
 }
 
+/** Called when an authenticated request returns HTTP 401 (expired/invalid token). */
+let sessionExpiredHandler = null;
+
+function setSessionExpiredHandler(fn) {
+  sessionExpiredHandler = fn;
+}
+
+/** True for errors thrown by apiFetch after a 401 with a Bearer token (session no longer valid). */
+function isSessionExpiredError(e) {
+  return Boolean(e && e.isUnauthorized);
+}
+
 async function apiFetch(path, token, opts = {}) {
   const headers = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -90,10 +102,27 @@ async function apiFetch(path, token, opts = {}) {
     const msg = Array.isArray(detail)
       ? detail.map(e => e.msg).join(", ")
       : (typeof detail === "string" ? detail : `HTTP ${res.status}`);
+    if (res.status === 401 && token) {
+      sessionExpiredHandler?.();
+      const err = new Error(msg);
+      err.isUnauthorized = true;
+      throw err;
+    }
     throw new Error(msg);
   }
   return res.json();
 }
 
 // Change added
-export { getPersist, setPersist, trackRecentSymbol, fmt, fmtPct, fmtDate, getMarketStatus, apiFetch };
+export {
+  getPersist,
+  setPersist,
+  trackRecentSymbol,
+  fmt,
+  fmtPct,
+  fmtDate,
+  getMarketStatus,
+  apiFetch,
+  setSessionExpiredHandler,
+  isSessionExpiredError,
+};

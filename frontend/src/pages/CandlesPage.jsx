@@ -4,7 +4,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, ReferenceLine, ComposedChart
 } from "recharts";
-import { getPersist, setPersist, apiFetch, trackRecentSymbol, fmt, fmtDate } from "../utils/Helpers.js";
+import { getPersist, setPersist, apiFetch, trackRecentSymbol, fmt, fmtDate, isSessionExpiredError } from "../utils/Helpers.js";
 import { SymbolAutocomplete } from "../components/SymbolAutocomplete";
 import { ChartTip } from "../components/ChartTip";
 import { NewsPanel } from "../components/NewsPanel";
@@ -30,7 +30,10 @@ function CandlesPage({ token }) {
       const d = await apiFetch(`/stocks/${symbol.toUpperCase()}/candles?limit=${limit}`, token);
       setData(d);
       trackRecentSymbol(symbol);
-    } catch (e) { setErr(e.message); }
+    } catch (e) {
+      if (isSessionExpiredError(e)) return;
+      setErr(e.message);
+    }
     finally { setLoading(false); }
   };
 

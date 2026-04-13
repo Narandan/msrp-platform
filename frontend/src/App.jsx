@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { STYLE } from "./styles/styles.js";
-import { getPersist, setPersist, apiFetch } from "./utils/Helpers.js";
+import { getPersist, setPersist, apiFetch, setSessionExpiredHandler, isSessionExpiredError } from "./utils/Helpers.js";
 import { AuthPage } from "./pages/AuthPage";
 import { Dashboard } from "./pages/Dashboard";
 import { IngestPage } from "./pages/IngestPage";
@@ -18,6 +18,7 @@ import { BacktestPage } from "./pages/BacktestPage";
 export default function App() {
   const [token, setToken] = useState(() => localStorage.getItem("msrp_token") || "");
   const [userEmail, setUserEmail] = useState(() => localStorage.getItem("msrp_email") || "");
+  const [authNotice, setAuthNotice] = useState("");
   const [page, setPage] = useState(() => {
     const p = getPersist();
     return p.page && ["home", "watchlist", "ingest", "candles", "indicators", "backtest"].includes(p.page) ? p.page : "home";
@@ -28,6 +29,7 @@ export default function App() {
   }, [page]);
 
   const onAuth = useCallback((t, email) => {
+    setAuthNotice("");
     setToken(t); setUserEmail(email);
     localStorage.setItem("msrp_token", t);
     localStorage.setItem("msrp_email", email);
@@ -47,6 +49,11 @@ export default function App() {
       toast.error(message);
     }
   }, []);
+
+  useEffect(() => {
+    setSessionExpiredHandler(sessionExpired);
+    return () => setSessionExpiredHandler(null);
+  }, [sessionExpired]);
 
   useEffect(() => {
     if (!token) return;
@@ -74,15 +81,6 @@ export default function App() {
       <div className="app">
         <header className="topbar">
           <div className="logo">MSRP<span>.</span></div>
-          {token && (
-            <nav className="topbar-nav">
-              {NAV.map(n => (
-                <button key={n.id} className={`nav-btn${page === n.id ? " active" : ""}`} onClick={() => setPage(n.id)}>
-                  {n.label}
-                </button>
-              ))}
-            </nav>
-          )}
           <div className="topbar-right">
             {token ? (
               <>
@@ -99,7 +97,7 @@ export default function App() {
         </header>
 
         {!token ? (
-          <AuthPage onAuth={onAuth} />
+          <AuthPage onAuth={onAuth} sessionNotice={authNotice} />
         ) : (
           <div className="main">
             <aside className="sidebar">

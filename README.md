@@ -73,6 +73,44 @@ On a fresh clone the backtest checks return 401 — that's a **pass**. The smoke
 
 ---
 
+## Troubleshooting
+
+### macOS: pip SSL certificate errors
+
+Some setups show `SSL: CERTIFICATE_VERIFY_FAILED`, `certificate verify failed`, or similar when running `pip install` (often right after installing Python from **python.org**).
+
+**1. Run the bundled certificate installer (preferred)**  
+Official macOS builds from python.org include **`Install Certificates.command`**. It refreshes the CA bundle used by that Python:
+
+```bash
+# Adjust the path to match your installed version (see /Applications/Python 3.x/)
+open "/Applications/Python 3.12/Install Certificates.command"
+```
+
+Or double-click **`Install Certificates.command`** in Finder under **`/Applications/Python 3.x/`**. Re-activate your venv and retry:
+
+```bash
+cd backend && source venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+**2. Homebrew Python**  
+If you use `brew install python`, certificates are usually correct. If problems persist, upgrade tooling inside the venv (still over HTTPS, no trust bypass):
+
+```bash
+python -m pip install --upgrade pip certifi
+pip install -r requirements.txt
+```
+
+**3. Corporate network / TLS inspection**  
+If browsers work but pip does not, traffic may be intercepted. Install your organization’s root certificate into the **macOS Keychain** (System) and trust it for SSL, or follow IT’s instructions for Python/package installs.
+
+**4. What to avoid**  
+Do **not** adopt permanent workarounds that disable TLS verification for PyPI (for example `--trusted-host` for routine installs). That hides the real problem and weakens security. Fix trust stores or corporate certs first.
+
+---
+
 ## Increment 2 Features
 
 ### Backend

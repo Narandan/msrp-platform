@@ -4,7 +4,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, ReferenceLine, ComposedChart
 } from "recharts";
-import { getPersist, setPersist, apiFetch, trackRecentSymbol, fmt, fmtPct, fmtDate } from "../utils/Helpers.js";
+import { getPersist, setPersist, apiFetch, trackRecentSymbol, fmt, fmtPct, fmtDate, isSessionExpiredError } from "../utils/Helpers.js";
 import { SymbolAutocomplete } from "../components/SymbolAutocomplete";
 import { ChartTip } from "../components/ChartTip";
 
@@ -58,7 +58,10 @@ function BacktestPage({ token }) {
           numTrades: data?.metrics?.num_trades,
         },
       });
-    } catch (e) { setErr(e.message); }
+    } catch (e) {
+      if (isSessionExpiredError(e)) return;
+      setErr(e.message);
+    }
     finally { setLoading(false); }
   };
 

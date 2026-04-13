@@ -4,7 +4,7 @@ import { apiFetch } from "../utils/Helpers.js";
 // ─── AUTH PAGE ────────────────────────────────────────────────────────────────
 // Refactoring: Any changes to the original made I will mark with comments.
 // Note: 1 change was made to the original code 
-function AuthPage({ onAuth }) {
+function AuthPage({ onAuth, sessionNotice }) {
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,6 +38,11 @@ function AuthPage({ onAuth }) {
   return (
     <div className="auth-wrap">
       <div className="auth-box">
+        {sessionNotice && (
+          <div className="auth-notice" role="status">
+            {sessionNotice}
+          </div>
+        )}
         <div className="auth-title">MSRP</div>
         <div className="auth-sub">Market Signal & Research Platform</div>
         <div className="auth-tabs">
