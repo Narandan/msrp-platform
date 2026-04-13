@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -25,7 +25,7 @@ def ingest_symbol_candles(
     symbol: str,
     start: date,
     end: date,
-    provider: StooqProvider | None = None,
+    provider: Optional[StooqProvider] = None,
 ) -> Tuple[int, int, int]:
     """
     Fetch candles from provider and insert into DB.

@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import List, Optional
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Integer, Date, Float, ForeignKey, UniqueConstraint, Index
 from app.db.base import Base
@@ -8,9 +10,9 @@ class Symbol(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     ticker: Mapped[str] = mapped_column(String(16), unique=True, index=True, nullable=False)
-    name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
 
-    candles: Mapped[list["Candle"]] = relationship(back_populates="symbol", cascade="all, delete-orphan")
+    candles: Mapped[List["Candle"]] = relationship(back_populates="symbol", cascade="all, delete-orphan")
 
 
 class Candle(Base):

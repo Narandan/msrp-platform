@@ -201,6 +201,9 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+# Kiro IDE
+.kiro/
+
 # Marimo
 marimo/_static/
 marimo/_lsp/
@@ -218,3 +221,5 @@ __pycache__/
 backend/msrp.db
 .DS_Store
 **/.DS_Store
+*.pkl
+backend/models/
