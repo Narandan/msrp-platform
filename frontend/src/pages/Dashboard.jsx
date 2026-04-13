@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getPersist, setPersist, apiFetch, getMarketStatus, fmtPct } from "../utils/Helpers.js";
+import { getPersist, setPersist, apiFetch, getMarketStatus, fmtPct, isSessionExpiredError } from "../utils/Helpers.js";
 import { MiniSparkline } from "../components/MiniSparkline";
 
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
@@ -18,7 +18,10 @@ function Dashboard({ token, userEmail, setPage }) {
     if (!token) return;
     apiFetch("/watchlist", token)
       .then((d) => setWatchlist(d.symbols || []))
-      .catch(() => setWatchlist([]));
+      .catch((e) => {
+        if (isSessionExpiredError(e)) return;
+        setWatchlist([]);
+      });
   }, [token]);
   useEffect(() => {
     const update = () => {

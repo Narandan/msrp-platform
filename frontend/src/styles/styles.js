@@ -90,6 +90,16 @@ const STYLE = `
     font-family: var(--font-head); font-size: 26px; font-weight: 800;
     margin-bottom: 4px;
   }
+  .auth-notice {
+    font-size: 12px;
+    line-height: 1.45;
+    margin: -4px 0 20px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: rgba(200,245,66,0.1);
+    border: 1px solid rgba(200,245,66,0.35);
+    color: var(--fg);
+  }
   .auth-sub { color: var(--muted); font-size: 12px; margin-bottom: 28px; }
   .auth-tabs { display: flex; gap: 4px; margin-bottom: 28px; }
   .auth-tab {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { apiFetch } from "../utils/Helpers.js";
+import { apiFetch, isSessionExpiredError } from "../utils/Helpers.js";
 
 // ─── NEWS PANEL ───────────────────────────────────────────────────────────────
 // Refactoring: Like SymbolAutocomplete, NewsPanel will be a seperate file for both length and maintainability. 
@@ -22,6 +22,7 @@ function NewsPanel({ symbol, token }) {
         })
         .catch(e => {
           if (cancelled) return;
+          if (isSessionExpiredError(e)) return;
           setErr(e.message);
           setArticles([]);
         })

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getPersist, setPersist, apiFetch, trackRecentSymbol } from "../utils/Helpers.js";
+import { getPersist, setPersist, apiFetch, trackRecentSymbol, isSessionExpiredError } from "../utils/Helpers.js";
 import { SymbolAutocomplete } from "../components/SymbolAutocomplete";
 
 // ─── INGEST PAGE ──────────────────────────────────────────────────────────────
@@ -25,7 +25,10 @@ function IngestPage({ token }) {
       setResult(data);
       trackRecentSymbol(symbol);
       setPersist({ lastIngestedDate: new Date().toISOString().slice(0, 10) });
-    } catch (e) { setErr(e.message); }
+    } catch (e) {
+      if (isSessionExpiredError(e)) return;
+      setErr(e.message);
+    }
     finally { setLoading(false); }
   };
 

@@ -1,0 +1,11 @@
+{
+  "name": "msrp-platform",
+  "private": true,
+  "description": "Root scripts delegate to frontend/; run npm install in frontend/ first.",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "lint": "npm run lint --prefix frontend",
+    "preview": "npm run preview --prefix frontend"
+  }
+}
