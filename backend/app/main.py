@@ -1,3 +1,8 @@
+# Check for dependencies happens before imports so it will run in time, however,
+# this means that if there are missing dependencies, this error will show at the top of the error pile.
+from app.core.preflight import checkInstalls
+checkInstalls()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -17,7 +22,7 @@ app = FastAPI(title="MSRP Platform", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,6 +32,14 @@ app.add_middleware(
 def health():
     return {"status": "ok"}
 
+@app.get("/")
+def root():
+    return {
+        "server": app.title,
+        "version": app.version,
+        "docs": "/docs",
+        "health": "/health"
+    }
 
 @app.on_event("startup")
 def on_startup():

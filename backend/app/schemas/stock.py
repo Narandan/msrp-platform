@@ -14,6 +14,7 @@ class CandleDTO(BaseModel):
     close: float
     volume: Optional[int] = None
 
+    model_config = {"from_attributes": True}
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -21,4 +22,5 @@ class SymbolSearchResult(BaseModel):
     ticker: str
     name: Optional[str] = None
 
+    model_config = {"from_attributes": True}
     model_config = ConfigDict(from_attributes=True)

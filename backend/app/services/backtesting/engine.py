@@ -42,6 +42,8 @@ def run_long_only_all_in_out(
     *,
     initial_cash: float = 10_000.0,
     transaction_cost_pct: float = 0.0,
+    stop_loss_pct: float = 0.0, # Both are default disabled
+    take_profit_pct: float = 0.0, # ^^^
 ) -> Tuple[List[EquityPoint], List[Trade]]:
     """
     Long-only execution:
@@ -52,11 +54,17 @@ def run_long_only_all_in_out(
     Trades execute at the signal day's close.
     Equity is marked-to-market each candle close.
     transaction_cost_pct: applied per trade as a fraction of notional (e.g. 0.001 = 0.1%).
+    stop_loss_pct: exit trade if price drops below entry_price * (1 - stop_loss_pct). Both stop_loss_pct and take_profit_pct are disabled by 0.0
+    take_profit_pct: exit trade if price rises above entry_price * (1 + take_profit_pct).
     """
     if initial_cash <= 0:
         raise ValueError("initial_cash must be > 0")
     if transaction_cost_pct < 0.0:
         raise ValueError("transaction_cost_pct must be >= 0")
+    if stop_loss_pct < 0.0:
+        raise ValueError("stop_loss_pct must be >= 0")
+    if take_profit_pct < 0.0:
+        raise ValueError("take_profit_pct must be >= 0")
 
     _validate_candles(candles)
     sig_by_date = _signal_map(signals)
@@ -88,39 +96,44 @@ def run_long_only_all_in_out(
             cash = 0.0
             in_trade = True
 
-        # SELL
-        elif sig == -1 and in_trade:
-            exit_date = c.date
-            exit_price = float(c.close)
+        if in_trade:
+            exit_reason = None
+            if sig == -1:
+                exit_reason = (sp.reason if sp is not None else None) or entry_reason or "strategy"
+            elif stop_loss_pct > 0 and c.close <= entry_price * (1 - stop_loss_pct):
+                exit_reason = "stop_loss"
+            elif take_profit_pct > 0 and c.close >= entry_price * (1 + take_profit_pct):
+                exit_reason = "take_profit"
+            if exit_reason is not None:
+                exit_date = c.date
+                exit_price = float(c.close)
 
-            cash = shares * exit_price * (1.0 - transaction_cost_pct) if transaction_cost_pct > 0 else shares * exit_price
+                cash = shares * exit_price * (1.0 - transaction_cost_pct) if transaction_cost_pct > 0 else shares * exit_price
 
-            assert entry_date is not None and entry_price is not None
-            cost_basis = entry_shares * entry_price
-            pnl = cash - cost_basis
-            return_pct = (exit_price / entry_price) - 1.0
+                assert entry_date is not None and entry_price is not None
+                cost_basis = entry_shares * entry_price
+                pnl = cash - cost_basis
+                return_pct = (exit_price / entry_price) - 1.0
 
-            reason = (sp.reason if sp is not None else None) or entry_reason
-
-            trades.append(
-                Trade(
-                    entry_date=entry_date,
-                    exit_date=exit_date,
-                    entry_price=float(entry_price),
-                    exit_price=float(exit_price),
-                    pnl=float(pnl),
-                    return_pct=float(return_pct),
-                    reason=reason,
+                trades.append(
+                    Trade(
+                        entry_date=entry_date,
+                        exit_date=exit_date,
+                        entry_price=float(entry_price),
+                        exit_price=float(exit_price),
+                        pnl=float(pnl),
+                        return_pct=float(return_pct),
+                        reason=exit_reason,
+                    )
                 )
-            )
 
-            # Reset
-            shares = 0.0
-            entry_shares = 0.0
-            in_trade = False
-            entry_date = None
-            entry_price = None
-            entry_reason = None
+                # Reset
+                shares = 0.0
+                entry_shares = 0.0
+                in_trade = False
+                entry_date = None
+                entry_price = None
+                entry_reason = None
 
         equity = cash + shares * float(c.close)
         equity_curve.append(EquityPoint(date=c.date, equity=float(equity)))
