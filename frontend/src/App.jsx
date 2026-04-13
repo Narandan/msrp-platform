@@ -88,15 +88,6 @@ export default function App() {
       <div className="app">
         <header className="topbar">
           <div className="logo">MSRP<span>.</span></div>
-          {token && (
-            <nav className="topbar-nav">
-              {NAV.map(n => (
-                <button key={n.id} className={`nav-btn${page === n.id ? " active" : ""}`} onClick={() => setPage(n.id)}>
-                  {n.label}
-                </button>
-              ))}
-            </nav>
-          )}
           <div className="topbar-right">
             {token ? (
               <>
