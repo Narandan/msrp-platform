@@ -115,6 +115,39 @@ def test_transaction_cost_reduces_pnl():
     assert trades_with_cost[0].pnl < trades_no_cost[0].pnl
 
 
+# --- Stop-loss / take-profit ---
+
+def test_stop_loss_exits_before_strategy_sell():
+    candles = [
+        CandlePoint(date=date(2023, 1, 1), close=100.0),
+        CandlePoint(date=date(2023, 1, 2), close=94.0),
+        CandlePoint(date=date(2023, 1, 3), close=110.0),
+    ]
+    signals = [
+        SignalPoint(date=date(2023, 1, 1), signal=1),
+    ]
+    _, trades = run_long_only_all_in_out(
+        candles, signals, initial_cash=1000.0, stop_loss_pct=0.05
+    )
+    assert len(trades) == 1
+    assert trades[0].exit_price == pytest.approx(94.0)
+    assert trades[0].reason == "stop_loss"
+
+
+def test_take_profit_exits_before_strategy_sell():
+    candles = [
+        CandlePoint(date=date(2023, 1, 1), close=100.0),
+        CandlePoint(date=date(2023, 1, 2), close=115.0),
+    ]
+    signals = [SignalPoint(date=date(2023, 1, 1), signal=1)]
+    _, trades = run_long_only_all_in_out(
+        candles, signals, initial_cash=1000.0, take_profit_pct=0.10
+    )
+    assert len(trades) == 1
+    assert trades[0].exit_price == pytest.approx(115.0)
+    assert trades[0].reason == "take_profit"
+
+
 # --- Multiple trades ---
 
 def test_multiple_buy_sell_cycles():

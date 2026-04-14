@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import {
-  LineChart, Line, AreaChart, Area, BarChart, Bar,
+  Line, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, ReferenceLine, ComposedChart
 } from "recharts";
@@ -22,6 +22,8 @@ function BacktestPage({ token }) {
   const [slowPeriod, setSlowPeriod] = useState(p.slowPeriod ?? 20);
   const [initialCash, setInitialCash] = useState(p.initialCash ?? 10000);
   const [transactionCostPct, setTransactionCostPct] = useState(p.transactionCostPct ?? 0);
+  const [stopLossPct, setStopLossPct] = useState(p.stopLossPct ?? 0);
+  const [takeProfitPct, setTakeProfitPct] = useState(p.takeProfitPct ?? 0);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -38,14 +40,18 @@ function BacktestPage({ token }) {
         slowPeriod,
         initialCash,
         transactionCostPct,
+        stopLossPct,
+        takeProfitPct,
       },
     });
-  }, [symbol, start, end, strategy, smaPeriod, fastPeriod, slowPeriod, initialCash, transactionCostPct]);
+  }, [symbol, start, end, strategy, smaPeriod, fastPeriod, slowPeriod, initialCash, transactionCostPct, stopLossPct, takeProfitPct]);
 
   const run = async () => {
     setErr(""); setResult(null); setLoading(true);
     try {
-      let url = `/backtest/${symbol.toUpperCase()}?start=${start}&end=${end}&strategy=${strategy}&initial_cash=${initialCash}&transaction_cost_pct=${transactionCostPct / 10000}`;
+      const sl = Number(stopLossPct) || 0;
+      const tp = Number(takeProfitPct) || 0;
+      let url = `/backtest/${symbol.toUpperCase()}?start=${start}&end=${end}&strategy=${strategy}&initial_cash=${initialCash}&transaction_cost_pct=${transactionCostPct / 10000}&stop_loss_pct=${sl / 100}&take_profit_pct=${tp / 100}`;
       if (strategy === "sma_threshold") url += `&sma_period=${smaPeriod}`;
       else url += `&fast_period=${fastPeriod}&slow_period=${slowPeriod}`;
       const data = await apiFetch(url, token);
@@ -66,6 +72,14 @@ function BacktestPage({ token }) {
   };
 
   const m = result?.metrics;
+  const b = result?.benchmark;
+  const chartData = result
+    ? result.equity_curve.map((pt, i) => ({
+        date: pt.date,
+        equity: pt.equity,
+        buyHold: result.benchmark?.equity_curve?.[i]?.equity,
+      }))
+    : [];
 
   return (
     <div>
@@ -96,6 +110,16 @@ function BacktestPage({ token }) {
           <label>Transaction cost (bps, e.g. 10 = 0.1%)</label>
           <input type="number" value={transactionCostPct} onChange={e => setTransactionCostPct(Number(e.target.value) || 0)} min={0} step={1} />
         </div>
+        <div className="grid-2" style={{ marginTop: 8 }}>
+          <div className="field">
+            <label>Stop-loss (% of entry, 0 = off)</label>
+            <input type="number" value={stopLossPct} onChange={e => setStopLossPct(Number(e.target.value) || 0)} min={0} max={100} step={0.1} />
+          </div>
+          <div className="field">
+            <label>Take-profit (% of entry, 0 = off)</label>
+            <input type="number" value={takeProfitPct} onChange={e => setTakeProfitPct(Number(e.target.value) || 0)} min={0} step={0.1} />
+          </div>
+        </div>
         <div className="grid-2" style={{ marginTop: 12 }}>
           <div className="field"><label>Start</label><input type="date" value={start} onChange={e => setStart(e.target.value)} /></div>
           <div className="field"><label>End</label><input type="date" value={end} onChange={e => setEnd(e.target.value)} /></div>
@@ -123,10 +147,29 @@ function BacktestPage({ token }) {
             ))}
           </div>
 
+          {b && (
+            <div className="card" style={{ marginBottom: 16 }}>
+              <div className="card-title"><span className="dot" style={{ background: "var(--accent2)" }} />Buy &amp; hold benchmark</div>
+              <div className="page-sub" style={{ marginBottom: 12 }}>Same symbol and date range — full cash at first close, then hold.</div>
+              <div className="grid-4">
+                {[
+                  { label: "Total Return", val: fmtPct(b.total_return_pct), cls: b.total_return_pct >= 0 ? "pos" : "neg" },
+                  { label: "CAGR", val: fmtPct(b.cagr_pct), cls: b.cagr_pct >= 0 ? "pos" : "neg" },
+                  { label: "Sharpe", val: fmt(b.sharpe_ratio, 2), cls: "neu" },
+                ].map(c => (
+                  <div key={c.label} className="stat-chip">
+                    <div className="stat-chip-label">{c.label}</div>
+                    <div className={`stat-chip-val ${c.cls}`}>{c.val}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="card" style={{ marginBottom: 16 }}>
             <div className="card-title"><span className="dot" />Equity Curve</div>
             <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={result.equity_curve} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+              <ComposedChart data={chartData} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id="eq" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#c8f542" stopOpacity={0.2} />
@@ -137,9 +180,13 @@ function BacktestPage({ token }) {
                 <XAxis dataKey="date" tick={{ fill: "#6b6b80", fontSize: 10 }} tickLine={false} />
                 <YAxis tick={{ fill: "#6b6b80", fontSize: 10 }} tickLine={false} axisLine={false} domain={["auto", "auto"]} />
                 <Tooltip content={<ChartTip />} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
                 <ReferenceLine y={initialCash} stroke="#6b6b80" strokeDasharray="4 2" />
-                <Area type="monotone" dataKey="equity" stroke="#c8f542" fill="url(#eq)" strokeWidth={2} dot={false} name="Equity" />
-              </AreaChart>
+                <Area type="monotone" dataKey="equity" stroke="#c8f542" fill="url(#eq)" strokeWidth={2} dot={false} name="Strategy" />
+                {b && (
+                  <Line type="monotone" dataKey="buyHold" stroke="#8899ff" strokeWidth={2} dot={false} name="Buy & hold" />
+                )}
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
 

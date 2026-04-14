@@ -3,7 +3,9 @@ from datetime import date, timedelta
 import pytest
 
 from app.schemas.backtest import EquityPoint, Trade
+from app.services.backtesting.engine import CandlePoint, run_buy_and_hold_equity
 from app.services.backtesting.metrics import (
+    compute_buy_hold_benchmark,
     compute_metrics,
     _total_return_pct,
     _max_drawdown_pct,
@@ -241,3 +243,25 @@ def test_compute_metrics_includes_cagr():
     m = compute_metrics(equity_curve=equity, trades=[])
     assert isinstance(m.cagr_pct, float)
     assert m.cagr_pct == pytest.approx(10.0, rel=1e-3)
+
+
+# --- Buy-and-hold benchmark ---
+
+def test_run_buy_and_hold_flat_price_zero_total_return():
+    candles = [CandlePoint(date=date(2023, 1, 2) + timedelta(days=i), close=50.0) for i in range(5)]
+    curve = run_buy_and_hold_equity(candles, initial_cash=10_000.0, transaction_cost_pct=0.0)
+    bench = compute_buy_hold_benchmark(equity_curve=curve)
+    assert bench.total_return_pct == pytest.approx(0.0)
+    assert len(bench.equity_curve) == 5
+
+
+def test_run_buy_and_hold_two_day_gain():
+    candles = [
+        CandlePoint(date=date(2023, 1, 2), close=100.0),
+        CandlePoint(date=date(2023, 1, 3), close=110.0),
+    ]
+    curve = run_buy_and_hold_equity(candles, initial_cash=10_000.0, transaction_cost_pct=0.0)
+    bench = compute_buy_hold_benchmark(equity_curve=curve)
+    assert bench.total_return_pct == pytest.approx(10.0)
+    assert bench.equity_curve[0].equity == pytest.approx(10_000.0)
+    assert bench.equity_curve[1].equity == pytest.approx(11_000.0)

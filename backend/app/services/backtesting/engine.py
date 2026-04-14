@@ -139,3 +139,28 @@ def run_long_only_all_in_out(
         equity_curve.append(EquityPoint(date=c.date, equity=float(equity)))
 
     return equity_curve, trades
+
+
+def run_buy_and_hold_equity(
+    candles: Sequence[CandlePoint],
+    *,
+    initial_cash: float = 10_000.0,
+    transaction_cost_pct: float = 0.0,
+) -> List[EquityPoint]:
+    """
+    Invest all cash at the first candle's close (same fee model as a BUY in run_long_only_all_in_out),
+    then mark equity to market at each subsequent close.
+    """
+    if initial_cash <= 0:
+        raise ValueError("initial_cash must be > 0")
+    if transaction_cost_pct < 0.0:
+        raise ValueError("transaction_cost_pct must be >= 0")
+
+    _validate_candles(candles)
+    first_close = float(candles[0].close)
+    if transaction_cost_pct > 0:
+        shares = initial_cash / (first_close * (1.0 + transaction_cost_pct))
+    else:
+        shares = initial_cash / first_close
+
+    return [EquityPoint(date=c.date, equity=float(shares * float(c.close))) for c in candles]
