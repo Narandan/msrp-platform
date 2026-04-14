@@ -48,6 +48,18 @@ def backtest_symbol(
     bb_std: float = Query(2.0, ge=0.0, description="Bollinger Band std dev multiplier"),
     initial_cash: float = Query(10_000.0, gt=0.0, description="Starting cash"),
     transaction_cost_pct: float = Query(0.0, ge=0.0, le=0.1, description="Transaction cost as decimal (e.g. 0.001 = 0.1%)"),
+    stop_loss_pct: float = Query(
+        0.0,
+        ge=0.0,
+        le=1.0,
+        description="Optional: exit long if close <= entry * (1 - stop_loss_pct). Decimal, e.g. 0.05 = 5%. 0 = disabled.",
+    ),
+    take_profit_pct: float = Query(
+        0.0,
+        ge=0.0,
+        le=10.0,
+        description="Optional: exit long if close >= entry * (1 + take_profit_pct). Decimal, e.g. 0.15 = 15%. 0 = disabled.",
+    ),
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ) -> BacktestResult:
@@ -67,6 +79,8 @@ def backtest_symbol(
                 signal_period=macd_signal,
                 initial_cash=initial_cash,
                 transaction_cost_pct=transaction_cost_pct,
+                stop_loss_pct=stop_loss_pct,
+                take_profit_pct=take_profit_pct,
             )
         if strategy == "bollinger_breakout":
             return svc.run_bollinger_breakout_backtest(
@@ -77,6 +91,8 @@ def backtest_symbol(
                 bb_std=bb_std,
                 initial_cash=initial_cash,
                 transaction_cost_pct=transaction_cost_pct,
+                stop_loss_pct=stop_loss_pct,
+                take_profit_pct=take_profit_pct,
             )
         if strategy == "rsi_threshold":
             return svc.run_rsi_threshold_backtest(
@@ -88,6 +104,8 @@ def backtest_symbol(
                 overbought=overbought,
                 initial_cash=initial_cash,
                 transaction_cost_pct=transaction_cost_pct,
+                stop_loss_pct=stop_loss_pct,
+                take_profit_pct=take_profit_pct,
             )
         if strategy == "sma_crossover":
             return svc.run_sma_crossover_backtest(
@@ -98,6 +116,8 @@ def backtest_symbol(
                 slow_period=slow_period,
                 initial_cash=initial_cash,
                 transaction_cost_pct=transaction_cost_pct,
+                stop_loss_pct=stop_loss_pct,
+                take_profit_pct=take_profit_pct,
             )
         return svc.run_sma_threshold_backtest(
             symbol=symbol,
@@ -106,6 +126,8 @@ def backtest_symbol(
             sma_period=sma_period,
             initial_cash=initial_cash,
             transaction_cost_pct=transaction_cost_pct,
+            stop_loss_pct=stop_loss_pct,
+            take_profit_pct=take_profit_pct,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

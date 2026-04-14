@@ -22,6 +22,8 @@ function BacktestPage({ token }) {
   const [slowPeriod, setSlowPeriod] = useState(p.slowPeriod ?? 20);
   const [initialCash, setInitialCash] = useState(p.initialCash ?? 10000);
   const [transactionCostPct, setTransactionCostPct] = useState(p.transactionCostPct ?? 0);
+  const [stopLossPct, setStopLossPct] = useState(p.stopLossPct ?? 0);
+  const [takeProfitPct, setTakeProfitPct] = useState(p.takeProfitPct ?? 0);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -38,14 +40,18 @@ function BacktestPage({ token }) {
         slowPeriod,
         initialCash,
         transactionCostPct,
+        stopLossPct,
+        takeProfitPct,
       },
     });
-  }, [symbol, start, end, strategy, smaPeriod, fastPeriod, slowPeriod, initialCash, transactionCostPct]);
+  }, [symbol, start, end, strategy, smaPeriod, fastPeriod, slowPeriod, initialCash, transactionCostPct, stopLossPct, takeProfitPct]);
 
   const run = async () => {
     setErr(""); setResult(null); setLoading(true);
     try {
-      let url = `/backtest/${symbol.toUpperCase()}?start=${start}&end=${end}&strategy=${strategy}&initial_cash=${initialCash}&transaction_cost_pct=${transactionCostPct / 10000}`;
+      const sl = Number(stopLossPct) || 0;
+      const tp = Number(takeProfitPct) || 0;
+      let url = `/backtest/${symbol.toUpperCase()}?start=${start}&end=${end}&strategy=${strategy}&initial_cash=${initialCash}&transaction_cost_pct=${transactionCostPct / 10000}&stop_loss_pct=${sl / 100}&take_profit_pct=${tp / 100}`;
       if (strategy === "sma_threshold") url += `&sma_period=${smaPeriod}`;
       else url += `&fast_period=${fastPeriod}&slow_period=${slowPeriod}`;
       const data = await apiFetch(url, token);
@@ -103,6 +109,16 @@ function BacktestPage({ token }) {
         <div className="field" style={{ marginTop: 8 }}>
           <label>Transaction cost (bps, e.g. 10 = 0.1%)</label>
           <input type="number" value={transactionCostPct} onChange={e => setTransactionCostPct(Number(e.target.value) || 0)} min={0} step={1} />
+        </div>
+        <div className="grid-2" style={{ marginTop: 8 }}>
+          <div className="field">
+            <label>Stop-loss (% of entry, 0 = off)</label>
+            <input type="number" value={stopLossPct} onChange={e => setStopLossPct(Number(e.target.value) || 0)} min={0} max={100} step={0.1} />
+          </div>
+          <div className="field">
+            <label>Take-profit (% of entry, 0 = off)</label>
+            <input type="number" value={takeProfitPct} onChange={e => setTakeProfitPct(Number(e.target.value) || 0)} min={0} step={0.1} />
+          </div>
         </div>
         <div className="grid-2" style={{ marginTop: 12 }}>
           <div className="field"><label>Start</label><input type="date" value={start} onChange={e => setStart(e.target.value)} /></div>

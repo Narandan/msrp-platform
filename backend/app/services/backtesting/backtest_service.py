@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import List
+from typing import List, Tuple
 
 from sqlalchemy.orm import Session
 
@@ -48,6 +48,25 @@ class BacktestService:
             benchmark=benchmark,
         )
 
+    def _execute_strategy(
+        self,
+        candle_points: List[CandlePoint],
+        signals,
+        *,
+        initial_cash: float,
+        transaction_cost_pct: float,
+        stop_loss_pct: float = 0.0,
+        take_profit_pct: float = 0.0,
+    ) -> Tuple[List[EquityPoint], List[Trade]]:
+        return run_long_only_all_in_out(
+            candles=candle_points,
+            signals=signals,
+            initial_cash=initial_cash,
+            transaction_cost_pct=transaction_cost_pct,
+            stop_loss_pct=stop_loss_pct,
+            take_profit_pct=take_profit_pct,
+        )
+
     def run_sma_threshold_backtest(
         self,
         *,
@@ -57,6 +76,8 @@ class BacktestService:
         sma_period: int = 20,
         initial_cash: float = 10_000.0,
         transaction_cost_pct: float = 0.0,
+        stop_loss_pct: float = 0.0,
+        take_profit_pct: float = 0.0,
     ) -> BacktestResult:
         if sma_period <= 0:
             raise ValueError("sma_period must be > 0")
@@ -103,11 +124,13 @@ class BacktestService:
 
         candle_points = [CandlePoint(date=r.date, close=float(r.close)) for r in rows]
 
-        equity_curve, trades = run_long_only_all_in_out(
-            candles=candle_points,
-            signals=signals,
+        equity_curve, trades = self._execute_strategy(
+            candle_points,
+            signals,
             initial_cash=initial_cash,
             transaction_cost_pct=transaction_cost_pct,
+            stop_loss_pct=stop_loss_pct,
+            take_profit_pct=take_profit_pct,
         )
 
         return self._result_with_benchmark(
@@ -128,6 +151,8 @@ class BacktestService:
         slow_period: int = 20,
         initial_cash: float = 10_000.0,
         transaction_cost_pct: float = 0.0,
+        stop_loss_pct: float = 0.0,
+        take_profit_pct: float = 0.0,
     ) -> BacktestResult:
         if fast_period <= 0 or slow_period <= 0 or fast_period >= slow_period:
             raise ValueError("fast_period and slow_period must be > 0 and fast_period < slow_period")
@@ -171,11 +196,13 @@ class BacktestService:
         signals = generate_sma_crossover_signals(dates=dates, closes=closes, fast_sma=sma_fast, slow_sma=sma_slow)
 
         candle_points = [CandlePoint(date=r.date, close=float(r.close)) for r in rows]
-        equity_curve, trades = run_long_only_all_in_out(
-            candles=candle_points,
-            signals=signals,
+        equity_curve, trades = self._execute_strategy(
+            candle_points,
+            signals,
             initial_cash=initial_cash,
             transaction_cost_pct=transaction_cost_pct,
+            stop_loss_pct=stop_loss_pct,
+            take_profit_pct=take_profit_pct,
         )
         return self._result_with_benchmark(
             candle_points,
@@ -196,6 +223,8 @@ class BacktestService:
         overbought: float = 70.0,
         initial_cash: float = 10_000.0,
         transaction_cost_pct: float = 0.0,
+        stop_loss_pct: float = 0.0,
+        take_profit_pct: float = 0.0,
     ) -> BacktestResult:
         if rsi_period <= 0:
             raise ValueError("rsi_period must be > 0")
@@ -250,11 +279,13 @@ class BacktestService:
 
         candle_points = [CandlePoint(date=r.date, close=float(r.close)) for r in rows]
 
-        equity_curve, trades = run_long_only_all_in_out(
-            candles=candle_points,
-            signals=signals,
+        equity_curve, trades = self._execute_strategy(
+            candle_points,
+            signals,
             initial_cash=initial_cash,
             transaction_cost_pct=transaction_cost_pct,
+            stop_loss_pct=stop_loss_pct,
+            take_profit_pct=take_profit_pct,
         )
 
         return self._result_with_benchmark(
@@ -276,6 +307,8 @@ class BacktestService:
         signal_period: int = 9,
         initial_cash: float = 10_000.0,
         transaction_cost_pct: float = 0.0,
+        stop_loss_pct: float = 0.0,
+        take_profit_pct: float = 0.0,
     ) -> BacktestResult:
         if fast_period <= 0 or slow_period <= 0 or signal_period <= 0:
             raise ValueError("periods must be > 0")
@@ -334,11 +367,13 @@ class BacktestService:
 
         candle_points = [CandlePoint(date=r.date, close=float(r.close)) for r in rows]
 
-        equity_curve, trades = run_long_only_all_in_out(
-            candles=candle_points,
-            signals=signals,
+        equity_curve, trades = self._execute_strategy(
+            candle_points,
+            signals,
             initial_cash=initial_cash,
             transaction_cost_pct=transaction_cost_pct,
+            stop_loss_pct=stop_loss_pct,
+            take_profit_pct=take_profit_pct,
         )
 
         return self._result_with_benchmark(
@@ -359,6 +394,8 @@ class BacktestService:
         bb_std: float = 2.0,
         initial_cash: float = 10_000.0,
         transaction_cost_pct: float = 0.0,
+        stop_loss_pct: float = 0.0,
+        take_profit_pct: float = 0.0,
     ) -> BacktestResult:
         if bb_period <= 0:
             raise ValueError("bb_period must be > 0")
@@ -412,11 +449,13 @@ class BacktestService:
 
         candle_points = [CandlePoint(date=r.date, close=float(r.close)) for r in rows]
 
-        equity_curve, trades = run_long_only_all_in_out(
-            candles=candle_points,
-            signals=signals,
+        equity_curve, trades = self._execute_strategy(
+            candle_points,
+            signals,
             initial_cash=initial_cash,
             transaction_cost_pct=transaction_cost_pct,
+            stop_loss_pct=stop_loss_pct,
+            take_profit_pct=take_profit_pct,
         )
 
         return self._result_with_benchmark(
