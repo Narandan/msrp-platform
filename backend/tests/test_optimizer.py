@@ -39,6 +39,7 @@ _base_mod.Base = MagicMock()
 from app.schemas.backtest import (  # noqa: E402
     BacktestMetrics,
     BacktestResult,
+    BuyHoldBenchmark,
     EquityPoint,
     OptimizeRequest,
     Trade,
@@ -67,7 +68,13 @@ def _make_result(
         num_trades=num_trades,
         sharpe_ratio=sharpe,
     )
-    return BacktestResult(equity_curve=equity_curve, trades=[], metrics=metrics)
+    benchmark = BuyHoldBenchmark(
+        total_return_pct=5.0,
+        cagr_pct=5.0,
+        sharpe_ratio=0.5,
+        equity_curve=list(equity_curve),
+    )
+    return BacktestResult(equity_curve=equity_curve, trades=[], metrics=metrics, benchmark=benchmark)
 
 
 def _make_req(**overrides) -> OptimizeRequest:

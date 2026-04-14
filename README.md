@@ -27,7 +27,9 @@ npm install
 npm run dev
 ```
 
-- App: **http://localhost:5173**
+- App: **http://localhost:5173** (use the URL printed by Vite in the terminal)
+
+You need **both** processes running: API (port **8000**) and frontend (port **5173**). From the repository root, after `npm install` in `frontend/`, you can run **`npm run dev`** (see root `package.json`) instead of `cd frontend`.
 
 ### Test User (optional)
 
@@ -74,6 +76,24 @@ On a fresh clone the backtest checks return 401 — that's a **pass**. The smoke
 ---
 
 ## Troubleshooting
+
+### “Connection refused” / can’t open localhost
+
+**What it usually means:** nothing is listening on that port yet (the dev server or API is not running, or it exited with an error).
+
+1. **Backend** — In a terminal: `cd backend`, activate the venv, then `uvicorn app.main:app --reload`. Wait until you see Uvicorn report **http://127.0.0.1:8000**. Quick check:
+
+   ```bash
+   curl -s http://127.0.0.1:8000/health
+   ```
+
+   You should get JSON like `{"status":"ok"}`. If the command fails, fix the backend traceback first (missing deps: `pip install -r requirements.txt`).
+
+2. **Frontend** — Use a **second** terminal: `cd frontend && npm install && npm run dev` (or `npm run dev` from the repo root). Open the **exact URL** Vite prints (typically **http://localhost:5173**). If that terminal shows an error or exits, the browser will show connection refused.
+
+3. **Wrong URL** — The API is on **8000**, the SPA is on **5173**. Opening `http://localhost:8000` in the browser shows JSON/API docs, not the React app.
+
+4. **Chrome: `Unchecked runtime.lastError: The message port closed before a response was received`** — This is very often caused by a **browser extension** (not MSRP). Try a **private/incognito** window with extensions disabled, or another browser. If the UI loads and only API calls fail, confirm the backend is up and that `frontend` is configured to talk to the same host as your API (see `frontend/src/config/index.js`).
 
 ### macOS: pip SSL certificate errors
 

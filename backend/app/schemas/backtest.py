@@ -31,10 +31,20 @@ class BacktestMetrics(BaseModel):
     cagr_pct: Optional[float] = None
 
 
+class BuyHoldBenchmark(BaseModel):
+    """Buy at first bar's close, hold through the range (same cash and entry fee as strategy backtest)."""
+
+    total_return_pct: float
+    cagr_pct: float
+    sharpe_ratio: float
+    equity_curve: List[EquityPoint]
+
+
 class BacktestResult(BaseModel):
     equity_curve: List[EquityPoint]
     trades: List[Trade]
     metrics: BacktestMetrics
+    benchmark: BuyHoldBenchmark
 
 
 class OptimizeRequest(BaseModel):

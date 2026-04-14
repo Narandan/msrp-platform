@@ -36,18 +36,26 @@ export default function App() {
     setPage("home");
   }, []);
 
-  // Update: Toast added to logout logic, message is optional, provided from session expiration.
-  const logout = useCallback((message) => {
-    setToken(""); setUserEmail("");
+  const sessionExpired = useCallback(() => {
+    const msg = "Session expired, please sign in again.";
+    setAuthNotice(msg);
+    setToken("");
+    setUserEmail("");
     localStorage.removeItem("msrp_token");
     localStorage.removeItem("msrp_email");
-    // Change added: Removal of <<<< Head and ===== a few lines after. Supposedly it's a github conflict with merging.
-    // Watch for these in the future. 
     localStorage.removeItem("msrp_persist");
     setPage("home");
-    if (message) {
-      toast.error(message);
-    }
+    toast.error(msg);
+  }, []);
+
+  const logout = useCallback(() => {
+    setAuthNotice("");
+    setToken("");
+    setUserEmail("");
+    localStorage.removeItem("msrp_token");
+    localStorage.removeItem("msrp_email");
+    localStorage.removeItem("msrp_persist");
+    setPage("home");
   }, []);
 
   useEffect(() => {
@@ -59,8 +67,10 @@ export default function App() {
     if (!token) return;
     let cancelled = false;
     apiFetch("/auth/me", token)
-      .catch(() => {
-        if (!cancelled) logout("Session expired, please sign in again"); // Update: Added message to logout call for expiration
+      .catch((e) => {
+        if (cancelled) return;
+        if (isSessionExpiredError(e)) return;
+        logout();
       });
     return () => { cancelled = true; };
   }, [token, logout]);
@@ -88,7 +98,7 @@ export default function App() {
                   <span className="user-dot" />
                   {userEmail}
                 </div>
-                <button className="btn btn-danger" style={{ padding: "5px 14px", fontSize: 11 }} onClick={logout}>Sign Out</button>
+                <button className="btn btn-danger" style={{ padding: "5px 14px", fontSize: 11 }} onClick={() => logout()}>Sign Out</button>
               </>
             ) : (
               <div style={{ fontSize: 11, color: "var(--muted)" }}>Not signed in</div>

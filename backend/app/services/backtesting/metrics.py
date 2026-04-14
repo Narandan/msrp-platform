@@ -3,7 +3,7 @@ from __future__ import annotations
 from math import sqrt
 from typing import List
 
-from app.schemas.backtest import BacktestMetrics, EquityPoint, Trade
+from app.schemas.backtest import BacktestMetrics, BuyHoldBenchmark, EquityPoint, Trade
 
 
 def _total_return_pct(equity_curve: List[EquityPoint]) -> float:
@@ -180,4 +180,14 @@ def compute_metrics(*, equity_curve: List[EquityPoint], trades: List[Trade]) -> 
         sortino_ratio=float(_sortino_ratio(equity_curve)),
         calmar_ratio=float(_calmar_ratio(equity_curve)),
         cagr_pct=float(_cagr_pct(equity_curve)),
+    )
+
+
+def compute_buy_hold_benchmark(*, equity_curve: List[EquityPoint]) -> BuyHoldBenchmark:
+    """Metrics for a buy-and-hold equity curve (same formulas as strategy metrics where applicable)."""
+    return BuyHoldBenchmark(
+        total_return_pct=float(_total_return_pct(equity_curve)),
+        cagr_pct=float(_cagr_pct(equity_curve)),
+        sharpe_ratio=float(_sharpe_ratio(equity_curve)),
+        equity_curve=list(equity_curve),
     )

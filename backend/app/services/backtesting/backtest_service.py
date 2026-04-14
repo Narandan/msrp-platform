@@ -6,10 +6,10 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from app.db.models.stock import Candle, Symbol
-from app.schemas.backtest import BacktestResult
+from app.schemas.backtest import BacktestResult, EquityPoint, Trade
 from app.schemas.stock import CandleDTO
-from app.services.backtesting.engine import CandlePoint, run_long_only_all_in_out
-from app.services.backtesting.metrics import compute_metrics
+from app.services.backtesting.engine import CandlePoint, run_buy_and_hold_equity, run_long_only_all_in_out
+from app.services.backtesting.metrics import compute_buy_hold_benchmark, compute_metrics
 from app.services.indicators.sma import compute_sma
 from app.services.indicators.rsi import compute_rsi
 from app.services.indicators.macd import compute_macd
@@ -24,6 +24,29 @@ from app.services.strategies.bollinger_breakout import generate_bollinger_breako
 class BacktestService:
     def __init__(self, db: Session):
         self.db = db
+
+    @staticmethod
+    def _result_with_benchmark(
+        candle_points: List[CandlePoint],
+        equity_curve: List[EquityPoint],
+        trades: List[Trade],
+        *,
+        initial_cash: float,
+        transaction_cost_pct: float,
+    ) -> BacktestResult:
+        metrics = compute_metrics(equity_curve=equity_curve, trades=trades)
+        bh_curve = run_buy_and_hold_equity(
+            candle_points,
+            initial_cash=initial_cash,
+            transaction_cost_pct=transaction_cost_pct,
+        )
+        benchmark = compute_buy_hold_benchmark(equity_curve=bh_curve)
+        return BacktestResult(
+            equity_curve=equity_curve,
+            trades=trades,
+            metrics=metrics,
+            benchmark=benchmark,
+        )
 
     def run_sma_threshold_backtest(
         self,
@@ -87,9 +110,13 @@ class BacktestService:
             transaction_cost_pct=transaction_cost_pct,
         )
 
-        metrics = compute_metrics(equity_curve=equity_curve, trades=trades)
-
-        return BacktestResult(equity_curve=equity_curve, trades=trades, metrics=metrics)
+        return self._result_with_benchmark(
+            candle_points,
+            equity_curve,
+            trades,
+            initial_cash=initial_cash,
+            transaction_cost_pct=transaction_cost_pct,
+        )
 
     def run_sma_crossover_backtest(
         self,
@@ -150,8 +177,13 @@ class BacktestService:
             initial_cash=initial_cash,
             transaction_cost_pct=transaction_cost_pct,
         )
-        metrics = compute_metrics(equity_curve=equity_curve, trades=trades)
-        return BacktestResult(equity_curve=equity_curve, trades=trades, metrics=metrics)
+        return self._result_with_benchmark(
+            candle_points,
+            equity_curve,
+            trades,
+            initial_cash=initial_cash,
+            transaction_cost_pct=transaction_cost_pct,
+        )
 
     def run_rsi_threshold_backtest(
         self,
@@ -225,9 +257,13 @@ class BacktestService:
             transaction_cost_pct=transaction_cost_pct,
         )
 
-        metrics = compute_metrics(equity_curve=equity_curve, trades=trades)
-
-        return BacktestResult(equity_curve=equity_curve, trades=trades, metrics=metrics)
+        return self._result_with_benchmark(
+            candle_points,
+            equity_curve,
+            trades,
+            initial_cash=initial_cash,
+            transaction_cost_pct=transaction_cost_pct,
+        )
 
     def run_macd_crossover_backtest(
         self,
@@ -305,9 +341,13 @@ class BacktestService:
             transaction_cost_pct=transaction_cost_pct,
         )
 
-        metrics = compute_metrics(equity_curve=equity_curve, trades=trades)
-
-        return BacktestResult(equity_curve=equity_curve, trades=trades, metrics=metrics)
+        return self._result_with_benchmark(
+            candle_points,
+            equity_curve,
+            trades,
+            initial_cash=initial_cash,
+            transaction_cost_pct=transaction_cost_pct,
+        )
 
     def run_bollinger_breakout_backtest(
         self,
@@ -379,6 +419,10 @@ class BacktestService:
             transaction_cost_pct=transaction_cost_pct,
         )
 
-        metrics = compute_metrics(equity_curve=equity_curve, trades=trades)
-
-        return BacktestResult(equity_curve=equity_curve, trades=trades, metrics=metrics)
+        return self._result_with_benchmark(
+            candle_points,
+            equity_curve,
+            trades,
+            initial_cash=initial_cash,
+            transaction_cost_pct=transaction_cost_pct,
+        )

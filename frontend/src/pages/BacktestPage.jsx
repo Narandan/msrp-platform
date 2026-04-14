@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import {
-  LineChart, Line, AreaChart, Area, BarChart, Bar,
+  Line, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, ReferenceLine, ComposedChart
 } from "recharts";
@@ -66,6 +66,14 @@ function BacktestPage({ token }) {
   };
 
   const m = result?.metrics;
+  const b = result?.benchmark;
+  const chartData = result
+    ? result.equity_curve.map((pt, i) => ({
+        date: pt.date,
+        equity: pt.equity,
+        buyHold: result.benchmark?.equity_curve?.[i]?.equity,
+      }))
+    : [];
 
   return (
     <div>
@@ -123,10 +131,29 @@ function BacktestPage({ token }) {
             ))}
           </div>
 
+          {b && (
+            <div className="card" style={{ marginBottom: 16 }}>
+              <div className="card-title"><span className="dot" style={{ background: "var(--accent2)" }} />Buy &amp; hold benchmark</div>
+              <div className="page-sub" style={{ marginBottom: 12 }}>Same symbol and date range — full cash at first close, then hold.</div>
+              <div className="grid-4">
+                {[
+                  { label: "Total Return", val: fmtPct(b.total_return_pct), cls: b.total_return_pct >= 0 ? "pos" : "neg" },
+                  { label: "CAGR", val: fmtPct(b.cagr_pct), cls: b.cagr_pct >= 0 ? "pos" : "neg" },
+                  { label: "Sharpe", val: fmt(b.sharpe_ratio, 2), cls: "neu" },
+                ].map(c => (
+                  <div key={c.label} className="stat-chip">
+                    <div className="stat-chip-label">{c.label}</div>
+                    <div className={`stat-chip-val ${c.cls}`}>{c.val}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="card" style={{ marginBottom: 16 }}>
             <div className="card-title"><span className="dot" />Equity Curve</div>
             <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={result.equity_curve} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+              <ComposedChart data={chartData} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id="eq" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#c8f542" stopOpacity={0.2} />
@@ -137,9 +164,13 @@ function BacktestPage({ token }) {
                 <XAxis dataKey="date" tick={{ fill: "#6b6b80", fontSize: 10 }} tickLine={false} />
                 <YAxis tick={{ fill: "#6b6b80", fontSize: 10 }} tickLine={false} axisLine={false} domain={["auto", "auto"]} />
                 <Tooltip content={<ChartTip />} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
                 <ReferenceLine y={initialCash} stroke="#6b6b80" strokeDasharray="4 2" />
-                <Area type="monotone" dataKey="equity" stroke="#c8f542" fill="url(#eq)" strokeWidth={2} dot={false} name="Equity" />
-              </AreaChart>
+                <Area type="monotone" dataKey="equity" stroke="#c8f542" fill="url(#eq)" strokeWidth={2} dot={false} name="Strategy" />
+                {b && (
+                  <Line type="monotone" dataKey="buyHold" stroke="#8899ff" strokeWidth={2} dot={false} name="Buy & hold" />
+                )}
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
 
