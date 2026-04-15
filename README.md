@@ -297,3 +297,10 @@ Increment 1 delivered the core backend: FastAPI, JWT auth, SQLite, Stooq ingesti
 Increment 2 focused on the frontend, taking th backend only sckeleton from Increment1 and building a working application. Witht the addition of a React frontend, watchlists, news, MACD, Bollinger Bands, EMA, SMA crossover strategy, transaction costs, and symbol autocomplete. Every feature is wired end to end from the UI through authenticated API endpoints to the database.
 link to video: https://youtu.be/0UbBxS7_lxI
 
+## Increment 3 
+
+Increment 3 focused on improving and polishing the frontend as well as refining backend logic. Added more backtest strategies (RSI, MACD, Bollinger), richer performance metrics (including Sortino, Calmar, and CAGR), a parameter grid-search optimizer, and an ML train/predict path on top of causal features.
+
+Link to video > 
+https://youtu.be/i6i56L5aUa0
+
