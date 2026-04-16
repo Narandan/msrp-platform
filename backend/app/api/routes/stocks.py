@@ -94,12 +94,14 @@ def list_candles(
         db.execute(
             select(Candle)
             .where(Candle.symbol_id == sym.id)
-            .order_by(Candle.date.asc())
+            .order_by(Candle.date.desc())
             .limit(limit)
         )
         .scalars()
         .all()
     )
+
+    rows = list(reversed(rows))
 
     return [
         CandleDTO(

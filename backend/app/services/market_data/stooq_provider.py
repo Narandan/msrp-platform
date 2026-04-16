@@ -50,6 +50,8 @@ class StooqProvider:
         volumes = quote.get("volume", [])
 
         candles: List[CandleDTO] = []
+        prev_close: float | None = None
+
         for i, ts in enumerate(timestamps):
             try:
                 row_date = datetime.fromtimestamp(ts, tz=timezone.utc).date()
@@ -58,17 +60,48 @@ class StooqProvider:
                 l = lows[i]
                 c = closes[i]
                 v = volumes[i]
+
                 # Skip rows with None values (market holidays / missing data)
                 if any(x is None for x in (o, h, l, c)):
                     continue
-                candles.append(CandleDTO(
-                    date=row_date,
-                    open=float(o),
-                    high=float(h),
-                    low=float(l),
-                    close=float(c),
-                    volume=int(v) if v is not None else 0,
-                ))
+
+                open_p = float(o)
+                high_p = float(h)
+                low_p = float(l)
+                close_p = float(c)
+                volume = int(v) if v is not None else 0
+
+                # Basic sanity checks
+                if open_p <= 0 or high_p <= 0 or low_p <= 0 or close_p <= 0:
+                    continue
+
+                # OHLC consistency checks
+                if high_p < max(open_p, close_p):
+                    continue
+                if low_p > min(open_p, close_p):
+                    continue
+                if low_p > high_p:
+                    continue
+
+                # Reject obvious bad outliers versus previous close
+                if prev_close is not None:
+                    pct_change = abs(close_p - prev_close) / prev_close
+                    if pct_change > 0.50:
+                        continue
+
+                candles.append(
+                    CandleDTO(
+                        date=row_date,
+                        open=open_p,
+                        high=high_p,
+                        low=low_p,
+                        close=close_p,
+                        volume=volume,
+                    )
+                )
+
+                prev_close = close_p
+
             except (IndexError, TypeError, ValueError):
                 continue
 
