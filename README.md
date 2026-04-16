@@ -294,7 +294,7 @@ Increment 1 delivered the core backend: FastAPI, JWT auth, SQLite, Stooq ingesti
 
 ##  Increment 2
 
-Increment 2 focused on the frontend, taking th backend only sckeleton from Increment1 and building a working application. Witht the addition of a React frontend, watchlists, news, MACD, Bollinger Bands, EMA, SMA crossover strategy, transaction costs, and symbol autocomplete. Every feature is wired end to end from the UI through authenticated API endpoints to the database.
+Increment 2 focused on the frontend, building a full application on top of the backend-only skeleton from Increment 1. With the addition of a React frontend, watchlists, news, MACD, Bollinger Bands, EMA, SMA crossover strategy, transaction costs, and symbol autocomplete. Every feature is wired end to end from the UI through authenticated API endpoints to the database.
 link to video: https://youtu.be/0UbBxS7_lxI
 
 ## Increment 3 
