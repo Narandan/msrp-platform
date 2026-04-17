@@ -1,0 +1,187 @@
+Software Requirements and Design Document 
+
+For
+
+Group 16
+
+
+
+Version 3.0
+
+
+
+Authors: 
+Narandan M
+Logan B
+Darya P
+Katya S
+
+
+
+
+ 
+1.	Overview (5 points)
+ The Market Signal & Research Platform (MSRP) is a full-stack web application designed to assist retail investors and analysts in performing technical analysis on publicly traded stocks. The system allows users to ingest historical OHLCV (Open, High, Low, Close, Volume) data, visualize price trends, compute technical indicators, and evaluate trading strategies through backtesting.
+Increment 3 builds on previous increments by refining backend logic and improving frontend usability. The system now supports additional backtest strategies (including RSI, MACD, and Bollinger-based approaches), expanded performance metrics, and improved data validation during ingestion. The platform also integrates external data sources for both market data and news, and includes a web-based interface for interacting with all core features.
+ 
+2.	Functional Requirements (10 points)
+FR-1 (High)
+The system shall allow users to register an account using email and password.
+FR-2 (High)
+The system shall allow registered users to authenticate using JWT-based login.
+FR-3 (High)
+The system shall securely hash user passwords before storing them.
+FR-4 (High)
+The system shall retrieve historical stock market data from an external provider.
+FR-5 (High)
+The system shall compute Simple Moving Average (SMA) indicators.
+FR-6 (High)
+The system shall compute Relative Strength Index (RSI) indicators.
+FR-7 (High)
+The system shall simulate historical backtests using price data and defined strategies.
+FR-8 (High)
+The system shall compute backtest performance metrics including profit/loss and return.
+FR-9 (Medium)
+The system shall expose REST API endpoints for authentication, stocks, indicators, and backtesting.
+FR-10 (High)
+The system shall allow ingestion and storage of stock data into the database.
+FR-11 (Medium)
+The system shall provide a web-based dashboard for interacting with system features.
+FR-12 (Medium)
+The system shall compute Exponential Moving Average (EMA) indicators.
+FR-13 (Medium)
+The system shall compute Bollinger Bands indicators.
+FR-14 (Medium)
+The system shall compute Sharpe ratio for backtest performance.
+FR-15 (Medium)
+The system shall allow users to specify transaction cost parameters in backtests.
+FR-16 (Medium)
+The system shall support multiple backtest strategies including SMA crossover.
+FR-17 (Medium)
+The system shall allow users to create and manage watchlists.
+FR-18 (Medium)
+The system shall provide an endpoint for searching stock symbols.
+FR-19 (Medium)
+The system shall retrieve and display stock-related news from an external RSS provider.
+FR-20 (Medium)
+The system shall generate trading signals based on strategy rules.
+FR-21 (Medium)
+The system shall support RSI-based backtesting strategies.
+FR-22 (Medium)
+The system shall support MACD-based backtesting strategies.
+FR-23 (Medium)
+The system shall support Bollinger Band breakout backtesting strategies.
+FR-24 (Medium)
+The system shall compute additional performance metrics including CAGR, Sortino ratio, and Calmar ratio.
+FR-25 (High)
+The system shall validate ingested OHLCV data and reject anomalous or invalid records.
+3.	Non-functional Requirements (10 points)
+NFR-1 Performance (High)
+API endpoints shall respond within acceptable latency under normal load conditions.
+NFR-2 Security (High)
+Authentication shall use JWT tokens with expiration.
+NFR-3 Data Integrity (High)
+Stock and user data shall be stored with relational constraints.
+NFR-4 Maintainability (High)
+The system shall follow a modular architecture with separated services.
+NFR-5 Scalability (Medium)
+The backend shall support containerized deployment for scaling.
+NFR-6 Reliability (Medium)
+The system shall handle invalid inputs gracefully.
+NFR-7 Code Quality (High)
+The system shall follow structured coding practices and naming conventions.
+NFR-8 Usability (Medium)
+The frontend shall provide clear feedback including loading states and error messages.
+NFR-9 Data Quality (High)
+The system shall validate external data inputs to prevent corruption of stored data.
+4.	Use Case Diagram (10 points)
+Actors:
+•	User 
+•	Authenticated User 
+•	System 
+Use Cases:
+Authentication:
+•	Register Account 
+•	Login / Obtain JWT 
+Stock Data:
+•	Search Stock Symbols 
+•	Ingest Stock Data 
+•	View Price History 
+Indicators:
+•	Compute SMA 
+•	Compute RSI 
+•	Compute EMA 
+•	Compute Bollinger Bands 
+Backtesting:
+•	Run SMA Backtest 
+•	Run RSI Backtest 
+•	Run MACD Backtest 
+•	Run Bollinger Backtest 
+•	Generate Trading Signals 
+•	Compute Backtest Metrics 
+•	Apply Transaction Costs 
+Dashboard:
+•	Navigate Dashboard 
+•	View Charts 
+•	View Indicators 
+Watchlists:
+•	Create Watchlist 
+•	Add Symbol to Watchlist 
+•	View Watchlist 
+News:
+•	View News Headlines
+5.	Class Diagram and/or Sequence Diagrams (15 points)
+The system follows a modular service-oriented architecture with clearly defined entities and service layers.
+Core Entities
+•	User 
+•	StockSymbol 
+•	Candle (OHLCV data) 
+•	IndicatorResult 
+•	BacktestRun 
+•	BacktestResult 
+•	Watchlist 
+•	WatchlistItem 
+Service Components
+AuthService:
+•	register_user 
+•	authenticate 
+StockService:
+•	ingest_price_data 
+•	get_price_series 
+IndicatorService:
+•	compute_sma 
+•	compute_rsi 
+•	compute_ema 
+•	compute_bollinger_bands 
+•	compute_macd 
+BacktestService:
+•	run_sma_threshold_backtest 
+•	run_sma_crossover_backtest 
+•	run_rsi_threshold_backtest 
+•	run_macd_crossover_backtest 
+•	run_bollinger_breakout_backtest 
+NewsService:
+•	fetch_news_from_rss 
+These services interact through REST API endpoints and operate on shared database entities.
+6.	Operating Environment (5 points)
+•  Operating Systems: macOS, Linux, Windows 
+•  Backend Runtime: Python 3.10+ 
+•  Framework: FastAPI 
+•  Frontend: React (Vite) 
+•  Database: SQLite (development), PostgreSQL (production) 
+•  Network: Internet access required for external data sources 
+•  Port: Backend runs on port 8000, frontend on port 5173
+7.	Assumptions and Dependencies (5 points)
+Assumptions
+•	The system operates in a single-node environment for development. 
+•	End-of-day market data is sufficient for analysis. 
+•	Users interact through a web browser interface. 
+•	External APIs return consistent and valid data. 
+Dependencies
+•	Yahoo Finance API for historical market data 
+•	Google News RSS for news integration 
+•	FastAPI and Python ecosystem 
+•	SQLite / PostgreSQL database systems 
+•	JWT libraries for authentication 
+•	React framework for frontend 
+•	XML parsing libraries for RSS processing
